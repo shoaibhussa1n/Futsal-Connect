@@ -123,18 +123,68 @@ GRANT ALL ON players TO anon, authenticated;
 -- FIX FOR ALL OTHER TABLES (Preventive)
 -- =====================================================
 
--- Teams table
+-- =====================================================
+-- FIX FOR TEAMS TABLE RLS
+-- =====================================================
+
+-- Step 1: Enable RLS on teams table
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+
+-- Step 2: Drop existing policies (if any)
 DROP POLICY IF EXISTS "Teams are viewable by everyone" ON teams;
 DROP POLICY IF EXISTS "Anyone can create teams" ON teams;
+DROP POLICY IF EXISTS "Authenticated users can create teams" ON teams;
 DROP POLICY IF EXISTS "Team captains can update their team" ON teams;
+DROP POLICY IF EXISTS "Team captains can delete their team" ON teams;
 
-CREATE POLICY "Teams are viewable by everyone" ON teams FOR SELECT USING (true);
-CREATE POLICY "Anyone can create teams" ON teams FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Team captains can update their team" ON teams 
-FOR UPDATE TO authenticated
-USING (auth.uid() IN (SELECT user_id FROM profiles WHERE id = teams.captain_id));
+-- Step 3: Create new policies for teams table
 
+-- Allow anyone to read teams (for matchmaking, etc.)
+CREATE POLICY "Teams are viewable by everyone" 
+ON teams 
+FOR SELECT 
+USING (true);
+
+-- Allow authenticated users to create teams
+-- The captain_id must match the user's profile
+CREATE POLICY "Authenticated users can create teams" 
+ON teams 
+FOR INSERT 
+TO authenticated
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles WHERE id = teams.captain_id
+  )
+);
+
+-- Allow team captains to update their team
+CREATE POLICY "Team captains can update their team" 
+ON teams 
+FOR UPDATE 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles WHERE id = teams.captain_id
+  )
+)
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles WHERE id = teams.captain_id
+  )
+);
+
+-- Allow team captains to delete their team (optional)
+CREATE POLICY "Team captains can delete their team" 
+ON teams 
+FOR DELETE 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles WHERE id = teams.captain_id
+  )
+);
+
+-- Grant permissions on teams table
 GRANT ALL ON teams TO anon, authenticated;
 
 -- =====================================================
