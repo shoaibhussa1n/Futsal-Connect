@@ -81,18 +81,30 @@ export default function ProfileCompletion({ onComplete }: ProfileCompletionProps
         .eq('user_id', user.id)
         .single();
 
+      // Log any error when checking for existing profile (non-critical)
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.warn('Profile check error:', profileError);
+      }
+
       let profileId: string;
 
       if (profile) {
         profileId = profile.id;
         // Update profile
-        await supabase
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({
             full_name: fullName,
             email: user.email,
           })
           .eq('id', profileId);
+
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+          setError(`Failed to update profile: ${updateError.message || 'Unknown error'}`);
+          setLoading(false);
+          return;
+        }
       } else {
         // Create profile
         const { data: newProfile, error: createError } = await supabase
@@ -105,26 +117,46 @@ export default function ProfileCompletion({ onComplete }: ProfileCompletionProps
           .select()
           .single();
 
-        if (createError || !newProfile) {
-          setError('Failed to create profile');
+        if (createError) {
+          console.error('Profile creation error:', createError);
+          setError(`Failed to create profile: ${createError.message || 'Unknown error'}. Please check your database setup and RLS policies.`);
           setLoading(false);
           return;
         }
+
+        if (!newProfile) {
+          setError('Failed to create profile: No data returned');
+          setLoading(false);
+          return;
+        }
+        
         profileId = newProfile.id;
       }
 
       // Upload photo if provided
       let photoUrl = null;
       if (photoFile) {
-        const fileName = `${user.id}-${Date.now()}.${photoFile.name.split('.').pop()}`;
-        const { data: uploadedUrl, error: uploadError } = await uploadFile('avatars', photoFile, fileName);
-        if (!uploadError && uploadedUrl) {
-          photoUrl = uploadedUrl;
-          // Update profile with avatar
-          await supabase
-            .from('profiles')
-            .update({ avatar_url: photoUrl })
-            .eq('id', profileId);
+        try {
+          const fileName = `${user.id}-${Date.now()}.${photoFile.name.split('.').pop()}`;
+          const { data: uploadedUrl, error: uploadError } = await uploadFile('avatars', photoFile, fileName);
+          if (uploadError) {
+            console.warn('Photo upload error (non-critical):', uploadError);
+            // Don't fail the whole process if photo upload fails
+          } else if (uploadedUrl) {
+            photoUrl = uploadedUrl;
+            // Update profile with avatar
+            const { error: avatarUpdateError } = await supabase
+              .from('profiles')
+              .update({ avatar_url: photoUrl })
+              .eq('id', profileId);
+            
+            if (avatarUpdateError) {
+              console.warn('Avatar update error (non-critical):', avatarUpdateError);
+            }
+          }
+        } catch (uploadErr: any) {
+          console.warn('Photo upload failed (non-critical):', uploadErr);
+          // Continue even if photo upload fails
         }
       }
 
