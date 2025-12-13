@@ -276,6 +276,81 @@ WITH CHECK (
 GRANT ALL ON player_invitations TO anon, authenticated;
 
 -- =====================================================
+-- FIX FOR MATCH_REQUESTS TABLE RLS
+-- =====================================================
+
+-- Step 1: Enable RLS on match_requests table
+ALTER TABLE match_requests ENABLE ROW LEVEL SECURITY;
+
+-- Step 2: Drop existing policies (if any)
+DROP POLICY IF EXISTS "Teams can view their match requests" ON match_requests;
+DROP POLICY IF EXISTS "Team captains can create match requests" ON match_requests;
+DROP POLICY IF EXISTS "Team captains can update match requests" ON match_requests;
+DROP POLICY IF EXISTS "Anyone can view match requests" ON match_requests;
+
+-- Step 3: Create new policies for match_requests table
+
+-- Allow teams to view match requests they sent or received
+CREATE POLICY "Teams can view their match requests" 
+ON match_requests 
+FOR SELECT 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT captain_id FROM teams 
+      WHERE id = match_requests.requester_team_id 
+         OR id = match_requests.requested_team_id
+    )
+  )
+);
+
+-- Allow team captains to create match requests
+CREATE POLICY "Team captains can create match requests" 
+ON match_requests 
+FOR INSERT 
+TO authenticated
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT captain_id FROM teams 
+      WHERE id = match_requests.requester_team_id
+    )
+  )
+);
+
+-- Allow team captains to update match requests (for the team they sent or received)
+CREATE POLICY "Team captains can update match requests" 
+ON match_requests 
+FOR UPDATE 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT captain_id FROM teams 
+      WHERE id = match_requests.requester_team_id 
+         OR id = match_requests.requested_team_id
+    )
+  )
+)
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT captain_id FROM teams 
+      WHERE id = match_requests.requester_team_id 
+         OR id = match_requests.requested_team_id
+    )
+  )
+);
+
+-- Grant permissions on match_requests table
+GRANT ALL ON match_requests TO anon, authenticated;
+
+-- =====================================================
 -- IF STILL GETTING ERRORS:
 -- =====================================================
 -- 1. Check Supabase Dashboard → Authentication → Policies
