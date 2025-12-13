@@ -20,6 +20,7 @@ import PlayerProfile from './components/PlayerProfile';
 import PlayerMarketplace from './components/PlayerMarketplace';
 import TeamInvitationSystem from './components/TeamInvitationSystem';
 import PlayerNotifications from './components/PlayerNotifications';
+import TeamNotifications from './components/TeamNotifications';
 import { checkProfileComplete, checkPlayerProfile, checkTeamProfile, getProfile } from './lib/api';
 import { supabase } from './lib/supabase';
 import { Loader2 } from 'lucide-react';
@@ -299,6 +300,16 @@ export default function App() {
             // Request rejected, can show notification
           }} 
         />;
+      case 'teamNotifications':
+        return <TeamNotifications 
+          onBack={() => setCurrentScreen('main')} 
+          onAccept={(id) => {
+            // Request accepted, can show notification
+          }} 
+          onReject={(id) => {
+            // Request rejected, can show notification
+          }} 
+        />;
       case 'main':
         return renderMainApp();
       default:
@@ -322,6 +333,7 @@ export default function App() {
             sessionStorage.setItem('teamId', teamId);
             setCurrentScreen('teamProfile');
           }}
+          onTeamNotifications={() => setCurrentScreen('teamNotifications')}
         />;
         break;
       case 'matchmaking':
@@ -337,6 +349,7 @@ export default function App() {
             setCurrentScreen('teamProfile');
           }}
           onInvitePlayers={() => setCurrentScreen('teamInvitations')}
+          onTeamNotifications={() => setCurrentScreen('teamNotifications')}
         />;
         break;
       case 'tournaments':

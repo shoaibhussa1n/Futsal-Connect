@@ -4,9 +4,10 @@ import { getTeams } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
-export default function TeamsScreen({ onViewTeam, onInvitePlayers }: { 
+export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotifications }: { 
   onViewTeam: (teamId: string) => void;
   onInvitePlayers?: () => void;
+  onTeamNotifications?: () => void;
 }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -79,9 +80,9 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers }: {
         <p className="text-zinc-500">Discover futsal teams in Karachi</p>
       </div>
 
-      {/* Invite Players Button */}
+      {/* Action Buttons */}
       {userTeamId && (
-        <div className="px-6 pb-4">
+        <div className="px-6 pb-4 space-y-3">
           <button
             onClick={onInvitePlayers}
             className="w-full bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-xl py-3 text-black font-medium flex items-center justify-center gap-2 active:scale-98 transition-transform shadow-[0_0_20px_rgba(0,255,87,0.2)]"
@@ -89,6 +90,15 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers }: {
             <UserPlus className="w-5 h-5" />
             Invite Players to Team
           </button>
+          {onTeamNotifications && (
+            <button
+              onClick={onTeamNotifications}
+              className="w-full bg-zinc-900 border-2 border-[#00FF57]/30 rounded-xl py-3 text-[#00FF57] font-medium flex items-center justify-center gap-2 active:scale-98 transition-transform"
+            >
+              <Bell className="w-5 h-5" />
+              Match Requests
+            </button>
+          )}
         </div>
       )}
 

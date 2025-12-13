@@ -98,7 +98,8 @@ export default function MatchRequestConfirmation({ onBack, opponentTeamId }: Mat
       if (requestError) {
         setError(requestError.message || 'Failed to send match request');
       } else {
-        // Success - go back
+        // Success - show message and go back
+        alert('Match request sent successfully! The team will be notified.');
         onBack();
       }
     } catch (err: any) {

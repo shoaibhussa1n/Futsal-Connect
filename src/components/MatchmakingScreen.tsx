@@ -1,22 +1,53 @@
 import { useState, useEffect } from 'react';
 import { Users, Target, TrendingUp, MapPin, Loader2 } from 'lucide-react';
 import { getTeams } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: (teamId: string) => void }) {
+  const { user } = useAuth();
   const [selectedArea, setSelectedArea] = useState('All Areas');
   const [ratingRange, setRatingRange] = useState([5, 8]);
   const [ageGroup, setAgeGroup] = useState('All');
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState<any[]>([]);
   const [filteredTeams, setFilteredTeams] = useState<any[]>([]);
+  const [userTeamId, setUserTeamId] = useState<string | null>(null);
 
   useEffect(() => {
+    loadUserTeam();
     loadTeams();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     filterTeams();
-  }, [teams, selectedArea, ratingRange, ageGroup]);
+  }, [teams, selectedArea, ratingRange, ageGroup, userTeamId]);
+
+  const loadUserTeam = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        const { data: team } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('captain_id', profile.id)
+          .single();
+
+        if (team) {
+          setUserTeamId(team.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user team:', error);
+    }
+  };
 
   const loadTeams = async () => {
     try {
@@ -47,6 +78,11 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
 
   const filterTeams = () => {
     let filtered = [...teams];
+
+    // Exclude user's own team
+    if (userTeamId) {
+      filtered = filtered.filter(team => team.id !== userTeamId);
+    }
 
     // Filter by area
     if (selectedArea !== 'All Areas') {

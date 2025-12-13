@@ -11,6 +11,7 @@ interface HomeScreenProps {
   onUpdateResult?: () => void;
   onViewLeaderboard?: () => void;
   onViewTeamProfile?: () => void;
+  onTeamNotifications?: () => void;
 }
 
 export default function HomeScreen({ 
@@ -18,7 +19,8 @@ export default function HomeScreen({
   onCreateMatch, 
   onUpdateResult,
   onViewLeaderboard,
-  onViewTeamProfile
+  onViewTeamProfile,
+  onTeamNotifications
 }: HomeScreenProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -166,12 +168,12 @@ export default function HomeScreen({
 
         {/* Team Stats Preview */}
         {userTeam ? (
-          <div 
-            onClick={onViewTeamProfile}
-            className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl p-6 mb-8 border border-zinc-800 cursor-pointer active:scale-98 transition-transform"
-          >
+          <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl p-6 mb-8 border border-zinc-800">
             <div className="flex items-center justify-between mb-6">
-              <div>
+              <div 
+                onClick={onViewTeamProfile}
+                className="flex-1 cursor-pointer active:scale-98 transition-transform"
+              >
                 <h3 className="text-xl mb-1">{userTeam.name}</h3>
                 <p className="text-zinc-500 text-sm">Your Team</p>
               </div>
@@ -180,6 +182,15 @@ export default function HomeScreen({
                 <p className="text-zinc-500 text-xs">Rating</p>
               </div>
             </div>
+            {onTeamNotifications && (
+              <button
+                onClick={onTeamNotifications}
+                className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              >
+                <Bell className="w-4 h-4" />
+                <span>View Match Requests</span>
+              </button>
+            )}
 
             <div className="grid grid-cols-4 gap-4">
               <div className="text-center">
