@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, TrendingUp, Trophy, Users, Target, Award, Loader2, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { getTeams, getMatches, getLeaderboard } from '../lib/api';
+import { getTeams, getMatches, getLeaderboard, getMatchRequests } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2b2dbb9dc.png';
 
@@ -28,10 +28,34 @@ export default function HomeScreen({
   const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const [topTeams, setTopTeams] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   useEffect(() => {
     loadData();
   }, [user]);
+
+  // Refresh match requests count when component comes into focus or becomes visible
+  useEffect(() => {
+    const handleFocus = () => {
+      if (userTeam) {
+        loadMatchRequestsCount();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && userTeam) {
+        loadMatchRequestsCount();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userTeam]);
 
   const loadData = async () => {
     if (!user) {
@@ -68,6 +92,9 @@ export default function HomeScreen({
             upcoming: true,
           });
           setUpcomingMatches(matches || []);
+
+          // Get pending match requests count
+          await loadMatchRequestsCount(team.id);
         }
       }
 
@@ -78,6 +105,25 @@ export default function HomeScreen({
       console.error('Error loading home data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMatchRequestsCount = async (teamId?: string) => {
+    const teamIdToUse = teamId || userTeam?.id;
+    if (!teamIdToUse) return;
+
+    try {
+      const { data: requests } = await getMatchRequests(teamIdToUse);
+      if (requests) {
+        const pendingCount = requests.filter(
+          (req: any) => req.requested_team_id === teamIdToUse && req.status === 'pending'
+        ).length;
+        setPendingRequestsCount(pendingCount);
+      } else {
+        setPendingRequestsCount(0);
+      }
+    } catch (error) {
+      console.error('Error loading match requests count:', error);
     }
   };
 
@@ -138,7 +184,22 @@ export default function HomeScreen({
       <div className="px-6 pb-6">
         {/* Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-lg mb-4 text-zinc-400">Quick Actions</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg text-zinc-400">Quick Actions</h2>
+            {onTeamNotifications && userTeam && (
+              <button
+                onClick={onTeamNotifications}
+                className="relative p-2 text-zinc-400 hover:text-[#00FF57] transition-colors active:scale-95"
+              >
+                <Bell className="w-6 h-6" />
+                {pendingRequestsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <button
               onClick={onCreateMatch}
@@ -182,15 +243,6 @@ export default function HomeScreen({
                 <p className="text-zinc-500 text-xs">Rating</p>
               </div>
             </div>
-            {onTeamNotifications && (
-              <button
-                onClick={onTeamNotifications}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
-              >
-                <Bell className="w-4 h-4" />
-                <span>View Match Requests</span>
-              </button>
-            )}
 
             <div className="grid grid-cols-4 gap-4">
               <div className="text-center">
