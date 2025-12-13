@@ -188,6 +188,94 @@ USING (
 GRANT ALL ON teams TO anon, authenticated;
 
 -- =====================================================
+-- FIX FOR PLAYER_INVITATIONS TABLE RLS
+-- =====================================================
+
+-- Step 1: Enable RLS on player_invitations table
+ALTER TABLE player_invitations ENABLE ROW LEVEL SECURITY;
+
+-- Step 2: Drop existing policies (if any)
+DROP POLICY IF EXISTS "Players can view their invitations" ON player_invitations;
+DROP POLICY IF EXISTS "Team captains can create invitations" ON player_invitations;
+DROP POLICY IF EXISTS "Team captains can view sent invitations" ON player_invitations;
+DROP POLICY IF EXISTS "Players can update invitation status" ON player_invitations;
+DROP POLICY IF EXISTS "Anyone can view invitations" ON player_invitations;
+
+-- Step 3: Create new policies for player_invitations table
+
+-- Allow players to view their own invitations
+CREATE POLICY "Players can view their invitations" 
+ON player_invitations 
+FOR SELECT 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT profile_id FROM players 
+      WHERE id = player_invitations.player_id
+    )
+  )
+);
+
+-- Allow team captains to view invitations they sent
+CREATE POLICY "Team captains can view sent invitations" 
+ON player_invitations 
+FOR SELECT 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT captain_id FROM teams 
+      WHERE id = player_invitations.team_id
+    )
+  )
+);
+
+-- Allow team captains to create invitations
+CREATE POLICY "Team captains can create invitations" 
+ON player_invitations 
+FOR INSERT 
+TO authenticated
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT captain_id FROM teams 
+      WHERE id = player_invitations.team_id
+    )
+  )
+);
+
+-- Allow players to update their own invitation status (accept/reject)
+CREATE POLICY "Players can update invitation status" 
+ON player_invitations 
+FOR UPDATE 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT profile_id FROM players 
+      WHERE id = player_invitations.player_id
+    )
+  )
+)
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles 
+    WHERE id IN (
+      SELECT profile_id FROM players 
+      WHERE id = player_invitations.player_id
+    )
+  )
+);
+
+-- Grant permissions on player_invitations table
+GRANT ALL ON player_invitations TO anon, authenticated;
+
+-- =====================================================
 -- IF STILL GETTING ERRORS:
 -- =====================================================
 -- 1. Check Supabase Dashboard → Authentication → Policies
