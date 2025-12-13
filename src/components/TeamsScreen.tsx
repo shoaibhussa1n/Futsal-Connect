@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, TrendingUp, Search, UserPlus, Loader2 } from 'lucide-react';
+import { Users, TrendingUp, Search, UserPlus, Loader2, Bell } from 'lucide-react';
 import { getTeams } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
