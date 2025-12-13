@@ -19,6 +19,7 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
   const [teamName, setTeamName] = useState('');
   const [ageGroup, setAgeGroup] = useState('Open');
   const [teamLevel, setTeamLevel] = useState(5);
+  const [area, setArea] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -58,8 +59,8 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
       return;
     }
 
-    if (!teamName.trim()) {
-      setError('Please enter a team name');
+    if (!teamName.trim() || !area) {
+      setError('Please enter a team name and select an area');
       return;
     }
 
@@ -94,19 +95,21 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
       }
 
       // Create team
+      // Note: If area field doesn't exist in teams table, add it via SQL: ALTER TABLE teams ADD COLUMN area TEXT;
       const { data: team, error: teamError } = await createTeam({
         name: teamName,
         captain_id: profile.id,
         logo_url: logoUrl,
         age_group: ageGroup,
         team_level: teamLevel,
+        area: area, // This will work once you add the column to the database
         rating: 5.0,
         wins: 0,
         losses: 0,
         draws: 0,
         total_goals: 0,
         total_mvps: 0,
-      });
+      } as any); // Using 'as any' temporarily until database schema is updated
 
       if (teamError || !team) {
         setError(teamError?.message || 'Failed to create team');
@@ -201,6 +204,39 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
               <option value="U18">U18</option>
               <option value="U21">U21</option>
               <option value="Open">Open</option>
+            </select>
+          </div>
+
+          {/* Area */}
+          <div>
+            <label className="text-sm text-zinc-400 mb-2 block">Area *</label>
+            <select
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              className="w-full bg-zinc-900 border-2 border-[#00FF57]/30 rounded-xl px-4 py-3 text-white focus:border-[#00FF57] focus:outline-none transition-colors"
+              required
+            >
+              <option value="">Select your area</option>
+              <option value="DHA">DHA</option>
+              <option value="Clifton">Clifton</option>
+              <option value="Gulshan-e-Iqbal">Gulshan-e-Iqbal</option>
+              <option value="Gulistan-e-Johar">Gulistan-e-Johar</option>
+              <option value="North Nazimabad">North Nazimabad</option>
+              <option value="Malir">Malir</option>
+              <option value="Lyari">Lyari</option>
+              <option value="Saddar">Saddar</option>
+              <option value="PECHS">PECHS</option>
+              <option value="Bahadurabad">Bahadurabad</option>
+              <option value="Shahrah-e-Faisal">Shahrah-e-Faisal</option>
+              <option value="Korangi">Korangi</option>
+              <option value="Landhi">Landhi</option>
+              <option value="Gulshan-e-Maymar">Gulshan-e-Maymar</option>
+              <option value="Scheme 33">Scheme 33</option>
+              <option value="Defence">Defence</option>
+              <option value="Karimabad">Karimabad</option>
+              <option value="Federal B Area">Federal B Area</option>
+              <option value="Garden">Garden</option>
+              <option value="Kemari">Kemari</option>
             </select>
           </div>
 

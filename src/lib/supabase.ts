@@ -65,6 +65,7 @@ export type Database = {
           logo_url: string | null;
           age_group: string;
           team_level: number;
+          area: string | null;
           rating: number;
           wins: number;
           losses: number;

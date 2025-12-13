@@ -27,6 +27,7 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
   const [experience, setExperience] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
   const [bio, setBio] = useState('');
+  const [area, setArea] = useState('');
 
   const positions = [
     'Goalkeeper',
@@ -70,8 +71,8 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
       return;
     }
 
-    if (!fullName.trim() || !age || !selectedPosition) {
-      setError('Please fill in all required fields');
+    if (!fullName.trim() || !age || !selectedPosition || !area) {
+      setError('Please fill in all required fields including area');
       return;
     }
 
@@ -127,7 +128,7 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
         height: height ? parseFloat(height) : null,
         weight: weight ? parseFloat(weight) : null,
         experience: experience || null,
-        city: 'Karachi',
+        city: area || 'Karachi',
         availability_days: selectedDays,
         preferred_time: preferredTime || null,
         bio: bio || null,
@@ -285,17 +286,39 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
             </select>
           </div>
 
-          {/* City */}
+          {/* Area */}
           <div>
-            <label className="text-sm text-zinc-400 mb-2 block">City</label>
+            <label className="text-sm text-zinc-400 mb-2 block">Area *</label>
             <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-              <input
-                type="text"
-                value="Karachi"
-                readOnly
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-12 py-4 text-white focus:outline-none opacity-60"
-              />
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 pointer-events-none z-10" />
+              <select
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-12 py-4 text-white focus:outline-none focus:border-[#00FF57] transition-colors appearance-none cursor-pointer"
+                required
+              >
+                <option value="" className="bg-zinc-900">Select your area</option>
+                <option value="DHA" className="bg-zinc-900">DHA</option>
+                <option value="Clifton" className="bg-zinc-900">Clifton</option>
+                <option value="Gulshan-e-Iqbal" className="bg-zinc-900">Gulshan-e-Iqbal</option>
+                <option value="Gulistan-e-Johar" className="bg-zinc-900">Gulistan-e-Johar</option>
+                <option value="North Nazimabad" className="bg-zinc-900">North Nazimabad</option>
+                <option value="Malir" className="bg-zinc-900">Malir</option>
+                <option value="Lyari" className="bg-zinc-900">Lyari</option>
+                <option value="Saddar" className="bg-zinc-900">Saddar</option>
+                <option value="PECHS" className="bg-zinc-900">PECHS</option>
+                <option value="Bahadurabad" className="bg-zinc-900">Bahadurabad</option>
+                <option value="Shahrah-e-Faisal" className="bg-zinc-900">Shahrah-e-Faisal</option>
+                <option value="Korangi" className="bg-zinc-900">Korangi</option>
+                <option value="Landhi" className="bg-zinc-900">Landhi</option>
+                <option value="Gulshan-e-Maymar" className="bg-zinc-900">Gulshan-e-Maymar</option>
+                <option value="Scheme 33" className="bg-zinc-900">Scheme 33</option>
+                <option value="Defence" className="bg-zinc-900">Defence</option>
+                <option value="Karimabad" className="bg-zinc-900">Karimabad</option>
+                <option value="Federal B Area" className="bg-zinc-900">Federal B Area</option>
+                <option value="Garden" className="bg-zinc-900">Garden</option>
+                <option value="Kemari" className="bg-zinc-900">Kemari</option>
+              </select>
             </div>
           </div>
 

@@ -48,10 +48,13 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
   const filterTeams = () => {
     let filtered = [...teams];
 
-    // Filter by area (if we had area data, for now just use all)
-    // if (selectedArea !== 'All Areas') {
-    //   filtered = filtered.filter(team => team.area === selectedArea);
-    // }
+    // Filter by area
+    if (selectedArea !== 'All Areas') {
+      filtered = filtered.filter(team => {
+        // Check if team has area field, otherwise show all
+        return team.area === selectedArea || !team.area;
+      });
+    }
 
     // Filter by rating range
     filtered = filtered.filter(team => {
@@ -96,10 +99,24 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
             <option>All Areas</option>
             <option>DHA</option>
             <option>Clifton</option>
-            <option>Gulshan</option>
+            <option>Gulshan-e-Iqbal</option>
+            <option>Gulistan-e-Johar</option>
             <option>North Nazimabad</option>
             <option>Malir</option>
+            <option>Lyari</option>
             <option>Saddar</option>
+            <option>PECHS</option>
+            <option>Bahadurabad</option>
+            <option>Shahrah-e-Faisal</option>
+            <option>Korangi</option>
+            <option>Landhi</option>
+            <option>Gulshan-e-Maymar</option>
+            <option>Scheme 33</option>
+            <option>Defence</option>
+            <option>Karimabad</option>
+            <option>Federal B Area</option>
+            <option>Garden</option>
+            <option>Kemari</option>
           </select>
         </div>
 
@@ -196,7 +213,7 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
                         <h3 className="mb-1">{team.name}</h3>
                         <div className="flex items-center gap-2 text-xs text-zinc-500">
                           <MapPin className="w-3 h-3" />
-                          {team.age_group} • Karachi
+                          {team.area || 'Karachi'} • {team.age_group}
                         </div>
                       </div>
                     </div>
