@@ -567,22 +567,47 @@ export async function uploadFile(
   file: File,
   path: string
 ) {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (error) {
-    return { data: null, error };
+  // Ensure we have a valid File object
+  if (!(file instanceof File)) {
+    return { data: null, error: { message: 'Invalid file object' } };
   }
 
-  const { data: urlData } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(data.path);
+  // Get the content type from the file
+  const contentType = file.type || 'image/png';
+  
+  // Validate file type
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+  if (!allowedTypes.includes(contentType)) {
+    return { data: null, error: { message: `File type ${contentType} is not supported. Please use PNG, JPEG, or WebP.` } };
+  }
 
-  return { data: urlData.publicUrl, error: null };
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: true, // Allow overwriting existing files
+        contentType: contentType,
+      });
+
+    if (error) {
+      console.error('Storage upload error:', error);
+      return { data: null, error };
+    }
+
+    if (!data) {
+      return { data: null, error: { message: 'Upload failed: No data returned' } };
+    }
+
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    return { data: urlData.publicUrl, error: null };
+  } catch (err: any) {
+    console.error('Upload exception:', err);
+    return { data: null, error: { message: err.message || 'Upload failed' } };
+  }
 }
 
 export async function deleteFile(bucket: string, path: string) {
