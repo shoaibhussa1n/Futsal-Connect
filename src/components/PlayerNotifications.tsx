@@ -70,15 +70,56 @@ export default function PlayerNotifications({ onBack, onAccept, onReject }: Play
     setProcessing(invitationId);
 
     try {
-      const { error } = await updatePlayerInvitation(invitationId, 'accepted');
-      if (error) {
-        alert(error.message || 'Failed to accept invitation');
-      } else {
-        alert('Invitation accepted!');
-        loadNotifications();
-        if (onAccept) {
-          onAccept(invitationId);
+      // First, get the invitation details
+      const { data: invitation, error: inviteError } = await supabase
+        .from('player_invitations')
+        .select('*, team:teams(*)')
+        .eq('id', invitationId)
+        .single();
+
+      if (inviteError || !invitation) {
+        alert('Failed to load invitation details');
+        return;
+      }
+
+      // Update invitation status
+      const { error: updateError } = await updatePlayerInvitation(invitationId, 'accepted');
+      if (updateError) {
+        alert(updateError.message || 'Failed to accept invitation');
+        return;
+      }
+
+      // If it's a team invitation, add the player to the team
+      if (invitation.invitation_type === 'team' && invitation.team_id && player) {
+        // Check if player is already a member
+        const { data: existingMember } = await supabase
+          .from('team_members')
+          .select('*')
+          .eq('team_id', invitation.team_id)
+          .eq('player_id', player.id)
+          .single();
+
+        if (!existingMember) {
+          // Add player to team
+          const { error: memberError } = await supabase
+            .from('team_members')
+            .insert({
+              team_id: invitation.team_id,
+              player_id: player.id,
+              role: 'member',
+            });
+
+          if (memberError) {
+            console.error('Error adding player to team:', memberError);
+            // Still show success since invitation was accepted
+          }
         }
+      }
+
+      alert('Invitation accepted!');
+      loadNotifications();
+      if (onAccept) {
+        onAccept(invitationId);
       }
     } catch (err: any) {
       alert(err.message || 'An error occurred');

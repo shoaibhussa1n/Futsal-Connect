@@ -226,13 +226,46 @@ export default function App() {
       case 'teamProfile':
         return <TeamProfile onBack={() => setCurrentScreen('main')} />;
       case 'playerProfile':
-        return <PlayerProfile onBack={() => setCurrentScreen('main')} onEdit={() => setCurrentScreen('playerRegistration')} onDelete={() => setCurrentScreen('main')} />;
+        return <PlayerProfile 
+          onBack={() => {
+            sessionStorage.removeItem('playerId');
+            setCurrentScreen('main');
+          }} 
+          onEdit={() => {
+            sessionStorage.setItem('editPlayer', 'true');
+            setCurrentScreen('playerRegistration');
+          }} 
+          onDelete={() => setCurrentScreen('main')}
+          playerId={sessionStorage.getItem('playerId') || undefined}
+        />;
       case 'playerMarketplace':
-        return <PlayerMarketplace onBack={() => setCurrentScreen('main')} onViewPlayer={(id) => setCurrentScreen('playerProfile')} onSendRequest={(id) => alert('Request sent to player!')} />;
+        return <PlayerMarketplace 
+          onBack={() => setCurrentScreen('main')} 
+          onViewPlayer={(id) => {
+            sessionStorage.setItem('playerId', id);
+            setCurrentScreen('playerProfile');
+          }} 
+          onSendRequest={(id) => {
+            // Request sent, can show notification or just continue
+          }} 
+        />;
       case 'teamInvitations':
-        return <TeamInvitationSystem onBack={() => setCurrentScreen('main')} onInvitePlayer={(id, type) => alert(`${type === 'team' ? 'Team invitation' : 'Match hire'} sent!`)} />;
+        return <TeamInvitationSystem 
+          onBack={() => setCurrentScreen('main')} 
+          onInvitePlayer={(id, type) => {
+            // Invitation sent, can show notification
+          }} 
+        />;
       case 'playerNotifications':
-        return <PlayerNotifications onBack={() => setCurrentScreen('main')} onAccept={(id) => alert('Request accepted!')} onReject={(id) => alert('Request rejected!')} />;
+        return <PlayerNotifications 
+          onBack={() => setCurrentScreen('main')} 
+          onAccept={(id) => {
+            // Request accepted, can show notification
+          }} 
+          onReject={(id) => {
+            // Request rejected, can show notification
+          }} 
+        />;
       case 'main':
         return renderMainApp();
       default:

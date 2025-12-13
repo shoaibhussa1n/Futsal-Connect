@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter, User, Target, TrendingUp, Send, Loader2 } from 'lucide-react';
-import { getPlayers } from '../lib/api';
+import { getPlayers, createPlayerInvitation } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface PlayerMarketplaceProps {
   onBack: () => void;
@@ -9,8 +11,10 @@ interface PlayerMarketplaceProps {
 }
 
 export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest }: PlayerMarketplaceProps) {
+  const { user } = useAuth();
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sendingRequest, setSendingRequest] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [ageRange, setAgeRange] = useState([15, 30]);
   const [selectedPosition, setSelectedPosition] = useState('all');
@@ -18,16 +22,86 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
   const [availabilityFilter, setAvailabilityFilter] = useState('All');
   const [players, setPlayers] = useState<any[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<any[]>([]);
+  const [userTeam, setUserTeam] = useState<any>(null);
 
   const positions = ['all', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward', 'Winger'];
 
   useEffect(() => {
     loadPlayers();
-  }, []);
+    loadUserTeam();
+  }, [user]);
 
   useEffect(() => {
     filterPlayers();
   }, [players, searchQuery, ageRange, selectedPosition, skillRange, availabilityFilter]);
+
+  const loadUserTeam = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        const { data: team } = await supabase
+          .from('teams')
+          .select('*')
+          .eq('captain_id', profile.id)
+          .single();
+
+        if (team) {
+          setUserTeam(team);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user team:', error);
+    }
+  };
+
+  const handleSendRequest = async (playerId: string) => {
+    if (!userTeam) {
+      alert('You need to create a team first to send requests to players');
+      return;
+    }
+
+    setSendingRequest(playerId);
+
+    try {
+      // Create a player invitation (team inviting player to join)
+      const { data, error } = await createPlayerInvitation({
+        team_id: userTeam.id,
+        player_id: playerId,
+        invitation_type: 'team',
+        match_id: null,
+        match_fee: null,
+        status: 'pending',
+        message: `Join ${userTeam.name}! We'd love to have you on our team.`,
+      });
+
+      if (error) {
+        alert(error.message || 'Failed to send request');
+      } else {
+        alert('Request sent successfully!');
+        if (onSendRequest) {
+          onSendRequest(playerId);
+        }
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setSendingRequest(null);
+    }
+  };
+
+  const handleViewPlayer = (playerId: string) => {
+    sessionStorage.setItem('playerId', playerId);
+    if (onViewPlayer) {
+      onViewPlayer(playerId);
+    }
+  };
 
   const loadPlayers = async () => {
     try {
@@ -319,17 +393,27 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <button
-                    onClick={() => onViewPlayer?.(player.id)}
+                    onClick={() => handleViewPlayer(player.id)}
                     className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg py-2.5 text-white text-sm active:scale-95 transition-transform"
                   >
                     View Profile
                   </button>
                   <button
-                    onClick={() => onSendRequest?.(player.id)}
-                    className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2.5 text-black text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                    onClick={() => handleSendRequest(player.id)}
+                    disabled={sendingRequest === player.id || !userTeam}
+                    className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2.5 text-black text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-4 h-4" />
-                    Send Request
+                    {sendingRequest === player.id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Request
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
