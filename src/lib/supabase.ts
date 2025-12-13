@@ -25,6 +25,15 @@ const createSupabaseClient = (): SupabaseClient => {
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
+    global: {
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    },
+    db: {
+      schema: 'public',
+    },
   });
 };
 
