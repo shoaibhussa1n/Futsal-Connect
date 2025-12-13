@@ -51,11 +51,20 @@ export default function PlayerNotifications({ onBack, onAccept, onReject }: Play
 
           // Get invitations
           const { data: invitations, error } = await getPlayerInvitations(playerData.id);
-          if (!error && invitations) {
+          console.log('Invitations loaded:', invitations, 'Error:', error);
+          
+          if (error) {
+            console.error('Error loading invitations:', error);
+          } else if (invitations) {
             const team = invitations.filter(inv => inv.invitation_type === 'team' && inv.status === 'pending');
             const match = invitations.filter(inv => inv.invitation_type === 'match' && inv.status === 'pending');
+            console.log('Team requests:', team, 'Match requests:', match);
             setTeamRequests(team);
             setMatchRequests(match);
+          } else {
+            console.log('No invitations found');
+            setTeamRequests([]);
+            setMatchRequests([]);
           }
         }
       }

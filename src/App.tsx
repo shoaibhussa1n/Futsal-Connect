@@ -225,7 +225,8 @@ export default function App() {
         return <LeaderboardScreen onBack={() => setCurrentScreen('main')} />;
       case 'teamProfile':
         return <TeamProfile onBack={() => setCurrentScreen('main')} />;
-      case 'playerProfile':
+      case 'playerProfile': {
+        const storedPlayerId = sessionStorage.getItem('playerId');
         return <PlayerProfile 
           onBack={() => {
             sessionStorage.removeItem('playerId');
@@ -236,8 +237,10 @@ export default function App() {
             setCurrentScreen('playerRegistration');
           }} 
           onDelete={() => setCurrentScreen('main')}
-          playerId={sessionStorage.getItem('playerId') || undefined}
+          playerId={storedPlayerId || undefined}
+          key={storedPlayerId || 'no-id'} // Force re-render when playerId changes
         />;
+      }
       case 'playerMarketplace':
         return <PlayerMarketplace 
           onBack={() => setCurrentScreen('main')} 

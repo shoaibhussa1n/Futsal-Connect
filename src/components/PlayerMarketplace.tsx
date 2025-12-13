@@ -67,9 +67,20 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
       return;
     }
 
+    if (!playerId) {
+      alert('Invalid player ID');
+      return;
+    }
+
     setSendingRequest(playerId);
 
     try {
+      console.log('Sending invitation:', {
+        team_id: userTeam.id,
+        player_id: playerId,
+        invitation_type: 'team'
+      });
+
       // Create a player invitation (team inviting player to join)
       const { data, error } = await createPlayerInvitation({
         team_id: userTeam.id,
@@ -82,21 +93,25 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
       });
 
       if (error) {
-        alert(error.message || 'Failed to send request');
+        console.error('Error sending invitation:', error);
+        alert(error.message || 'Failed to send request. Please check console for details.');
       } else {
+        console.log('Invitation sent successfully:', data);
         alert('Request sent successfully!');
         if (onSendRequest) {
           onSendRequest(playerId);
         }
       }
     } catch (err: any) {
-      alert(err.message || 'An error occurred');
+      console.error('Exception sending invitation:', err);
+      alert(err.message || 'An error occurred. Please check console for details.');
     } finally {
       setSendingRequest(null);
     }
   };
 
   const handleViewPlayer = (playerId: string) => {
+    console.log('Viewing player with ID:', playerId);
     sessionStorage.setItem('playerId', playerId);
     if (onViewPlayer) {
       onViewPlayer(playerId);

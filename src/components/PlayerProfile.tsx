@@ -19,76 +19,78 @@ export default function PlayerProfile({ onBack, onEdit, onDelete, playerId }: Pl
   const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
+    // Reset state when playerId changes
+    setPlayer(null);
+    setProfile(null);
+    setIsOwnProfile(false);
     loadPlayerData();
   }, [playerId, user]);
 
   const loadPlayerData = async () => {
-    if (!playerId) {
-      // If no playerId provided, try to get from sessionStorage
-      const storedId = sessionStorage.getItem('playerId');
-      if (!storedId) {
-        setLoading(false);
-        return;
-      }
-      await fetchPlayerData(storedId);
-    } else {
-      await fetchPlayerData(playerId);
+    // Get playerId from prop or sessionStorage
+    const idToLoad = playerId || sessionStorage.getItem('playerId');
+    
+    if (!idToLoad) {
+      console.warn('No playerId provided');
+      setLoading(false);
+      return;
     }
+
+    console.log('Loading player data for ID:', idToLoad);
+    await fetchPlayerData(idToLoad);
   };
 
   const fetchPlayerData = async (id: string) => {
     try {
       setLoading(true);
+      console.log('Fetching player with ID:', id);
+      
       const { data, error } = await getPlayerById(id);
       
       if (error) {
         console.error('Error loading player:', error);
+        alert(`Error loading player: ${error.message}`);
+        setLoading(false);
         return;
       }
 
-      if (data) {
-        setPlayer(data);
+      console.log('Player data received:', data);
+
+      if (!data) {
+        console.warn('No player data returned');
+        setLoading(false);
+        return;
+      }
+
+      setPlayer(data);
+      
+      // Get profile data - always fetch full profile
+      if (data.profile_id) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.profile_id)
+          .single();
         
-        // Get profile data - check if it's already included in the response
-        if (data.profiles) {
-          // Profile data is already included (but limited fields)
-          // We need to fetch full profile to get user_id
-          if (data.profile_id) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', data.profile_id)
-              .single();
-            
-            if (profileData) {
-              setProfile(profileData);
-              
-              // Check if this is the current user's profile
-              if (user && profileData.user_id === user.id) {
-                setIsOwnProfile(true);
-              }
-            }
-          }
-        } else if (data.profile_id) {
-          // Fetch profile separately
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.profile_id)
-            .single();
+        if (profileError) {
+          console.error('Error loading profile:', profileError);
+        } else if (profileData) {
+          console.log('Profile data received:', profileData);
+          setProfile(profileData);
           
-          if (profileData) {
-            setProfile(profileData);
-            
-            // Check if this is the current user's profile
-            if (user && profileData.user_id === user.id) {
-              setIsOwnProfile(true);
-            }
+          // Check if this is the current user's profile
+          if (user && profileData.user_id === user.id) {
+            setIsOwnProfile(true);
           }
+        } else {
+          console.warn('No profile data found for profile_id:', data.profile_id);
         }
+      } else {
+        console.warn('Player data has no profile_id');
       }
     } catch (error) {
       console.error('Error fetching player data:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
