@@ -71,6 +71,14 @@ export default function App() {
         return;
       }
 
+      // Don't check again if we're already on a screen that doesn't need checking
+      if (currentScreen !== 'checking' && currentScreen !== 'splash' && currentScreen !== 'onboarding') {
+        // Only check if we're on login or checking screen
+        if (currentScreen !== 'login') {
+          return;
+        }
+      }
+
       try {
         setCheckingProfile(true);
         
@@ -86,12 +94,24 @@ export default function App() {
         clearTimeout(timeoutId);
         setProfileComplete(isComplete);
 
+        let hasPlayer = false;
+        let hasTeam = false;
+
         if (isComplete) {
           // Get profile to check for player/team profiles
-          const { data: profile } = await getProfile(user.id);
+          const { data: profile, error: profileError } = await getProfile(user.id);
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            // If we can't get profile, treat as incomplete
+            setProfileComplete(false);
+            setCurrentScreen('profile-completion');
+            setCheckingProfile(false);
+            return;
+          }
+          
           if (profile) {
-            const hasPlayer = await checkPlayerProfile(profile.id);
-            const hasTeam = await checkTeamProfile(profile.id);
+            hasPlayer = await checkPlayerProfile(profile.id);
+            hasTeam = await checkTeamProfile(profile.id);
             setHasPlayerProfile(hasPlayer);
             setHasTeamProfile(hasTeam);
           }
@@ -100,28 +120,38 @@ export default function App() {
         // Navigate based on profile status
         if (!isComplete) {
           setCurrentScreen('profile-completion');
-        } else if (!hasPlayerProfile && !hasTeamProfile) {
+        } else if (!hasPlayer && !hasTeam) {
           setCurrentScreen('path-selection');
         } else {
           setCurrentScreen('main');
         }
       } catch (error) {
         console.error('Error checking profile:', error);
-        // On error, go to login to let user try again
-        setCurrentScreen('login');
+        // On error, try to go to login, but if we have a user, maybe just go to main
+        if (user) {
+          // If we have a user but check failed, try going to main anyway
+          setCurrentScreen('main');
+        } else {
+          setCurrentScreen('login');
+        }
       } finally {
         setCheckingProfile(false);
       }
     };
 
-    if (user && currentScreen === 'checking') {
-      checkUserProfile();
-    } else if (!user && !authLoading && currentScreen === 'checking') {
+    if (user && !authLoading) {
+      // Always check when user is authenticated and auth is done loading
+      if (currentScreen === 'checking' || currentScreen === 'login' || currentScreen === 'splash') {
+        checkUserProfile();
+      }
+    } else if (!user && !authLoading) {
       // If no user and auth is done loading, go to login
-      setCurrentScreen('login');
-      setCheckingProfile(false);
+      if (currentScreen === 'checking') {
+        setCurrentScreen('login');
+        setCheckingProfile(false);
+      }
     }
-  }, [user, authLoading, currentScreen]);
+  }, [user, authLoading]);
 
   // Redirect to login if not authenticated and trying to access protected routes
   useEffect(() => {
