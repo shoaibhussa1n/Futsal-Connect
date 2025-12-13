@@ -69,6 +69,75 @@ GRANT ALL ON profiles TO anon, authenticated;
 -- SELECT * FROM pg_policies WHERE tablename = 'profiles';
 
 -- =====================================================
+-- FIX FOR PLAYERS TABLE RLS
+-- =====================================================
+
+-- Step 1: Enable RLS on players table
+ALTER TABLE players ENABLE ROW LEVEL SECURITY;
+
+-- Step 2: Drop existing policies (if any)
+DROP POLICY IF EXISTS "Players are viewable by everyone" ON players;
+DROP POLICY IF EXISTS "Users can create own player profile" ON players;
+DROP POLICY IF EXISTS "Players can update own profile" ON players;
+DROP POLICY IF EXISTS "Players can delete own profile" ON players;
+
+-- Step 3: Create new policies for players table
+
+-- Allow anyone to read players (for marketplace, etc.)
+CREATE POLICY "Players are viewable by everyone" 
+ON players 
+FOR SELECT 
+USING (true);
+
+-- Allow authenticated users to insert their own player profile
+CREATE POLICY "Users can create own player profile" 
+ON players 
+FOR INSERT 
+TO authenticated
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles WHERE id = players.profile_id
+  )
+);
+
+-- Allow authenticated users to update their own player profile
+CREATE POLICY "Players can update own profile" 
+ON players 
+FOR UPDATE 
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM profiles WHERE id = players.profile_id
+  )
+)
+WITH CHECK (
+  auth.uid() IN (
+    SELECT user_id FROM profiles WHERE id = players.profile_id
+  )
+);
+
+-- Grant permissions on players table
+GRANT ALL ON players TO anon, authenticated;
+
+-- =====================================================
+-- FIX FOR ALL OTHER TABLES (Preventive)
+-- =====================================================
+
+-- Teams table
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Teams are viewable by everyone" ON teams;
+DROP POLICY IF EXISTS "Anyone can create teams" ON teams;
+DROP POLICY IF EXISTS "Team captains can update their team" ON teams;
+
+CREATE POLICY "Teams are viewable by everyone" ON teams FOR SELECT USING (true);
+CREATE POLICY "Anyone can create teams" ON teams FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Team captains can update their team" ON teams 
+FOR UPDATE TO authenticated
+USING (auth.uid() IN (SELECT user_id FROM profiles WHERE id = teams.captain_id));
+
+GRANT ALL ON teams TO anon, authenticated;
+
+-- =====================================================
 -- IF STILL GETTING ERRORS:
 -- =====================================================
 -- 1. Check Supabase Dashboard → Authentication → Policies
@@ -76,6 +145,7 @@ GRANT ALL ON profiles TO anon, authenticated;
 --    - VITE_SUPABASE_URL
 --    - VITE_SUPABASE_ANON_KEY
 -- 3. Check browser console for specific error messages
--- 4. Verify the profiles table exists in Table Editor
+-- 4. Verify the profiles and players tables exist in Table Editor
+-- 5. Make sure you're logged in when testing
 -- =====================================================
 
