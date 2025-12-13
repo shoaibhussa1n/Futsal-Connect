@@ -220,12 +220,21 @@ export default function App() {
         return <PathSelection onSelectPath={handlePathSelection} />;
       case 'teamRegistration':
         return <TeamRegistration onBack={() => {
+          sessionStorage.removeItem('editTeam');
           if (hasPlayerProfile || hasTeamProfile) {
             setCurrentScreen('main');
           } else {
             setCurrentScreen('path-selection');
           }
-        }} onComplete={handleTeamRegistered} />;
+        }} onComplete={() => {
+          const isEditMode = sessionStorage.getItem('editTeam') === 'true';
+          sessionStorage.removeItem('editTeam');
+          if (isEditMode) {
+            setCurrentScreen('teamProfile');
+          } else {
+            handleTeamRegistered();
+          }
+        }} />;
       case 'playerRegistration':
         return <PlayerRegistration 
           onBack={() => {
@@ -255,7 +264,14 @@ export default function App() {
       case 'leaderboard':
         return <LeaderboardScreen onBack={() => setCurrentScreen('main')} />;
       case 'teamProfile':
-        return <TeamProfile onBack={() => setCurrentScreen('main')} />;
+        return <TeamProfile 
+          onBack={() => setCurrentScreen('main')} 
+          onEditTeam={() => {
+            sessionStorage.setItem('editTeam', 'true');
+            setCurrentScreen('teamRegistration');
+          }}
+          onInvitePlayers={() => setCurrentScreen('teamInvitations')}
+        />;
       case 'playerProfile': {
         const storedPlayerId = sessionStorage.getItem('playerId');
         return <PlayerProfile 

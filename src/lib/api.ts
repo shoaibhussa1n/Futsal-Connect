@@ -82,6 +82,32 @@ export async function getTeamMembers(teamId: string) {
   return { data, error };
 }
 
+export async function addTeamMember(member: Inserts<'team_members'>) {
+  const { data, error } = await supabase
+    .from('team_members')
+    .insert(member)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function removeTeamMember(memberId: string) {
+  const { error } = await supabase
+    .from('team_members')
+    .delete()
+    .eq('id', memberId);
+  return { error };
+}
+
+export async function removeTeamMemberByPlayer(teamId: string, playerId: string) {
+  const { error } = await supabase
+    .from('team_members')
+    .delete()
+    .eq('team_id', teamId)
+    .eq('player_id', playerId);
+  return { error };
+}
+
 // ==================== PLAYERS ====================
 
 export async function getPlayers(filters?: {

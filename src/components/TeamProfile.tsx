@@ -1,18 +1,35 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Edit, Users, Trophy, Target, Award, TrendingUp, Loader2 } from 'lucide-react';
+import { ChevronLeft, Edit, Users, Trophy, Target, Award, TrendingUp, Loader2, X, UserPlus, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { getTeamById, getTeamMembers } from '../lib/api';
+import { getTeamById, getTeamMembers, updateTeam, removeTeamMember, uploadFile } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
-export default function TeamProfile({ onBack }: { onBack: () => void }) {
+interface TeamProfileProps {
+  onBack: () => void;
+  onEditTeam?: () => void;
+  onInvitePlayers?: () => void;
+}
+
+export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: TeamProfileProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [rank, setRank] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [removingMember, setRemovingMember] = useState<string | null>(null);
 
   useEffect(() => {
     loadTeamData();
+    
+    // Refresh data when window comes into focus (e.g., when returning from invite screen)
+    const handleFocus = () => {
+      if (team) {
+        loadTeamData();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [user]);
 
   const loadTeamData = async () => {
@@ -68,6 +85,27 @@ export default function TeamProfile({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const handleRemoveMember = async (memberId: string, playerName: string) => {
+    if (!confirm(`Are you sure you want to remove ${playerName} from the team?`)) {
+      return;
+    }
+
+    setRemovingMember(memberId);
+    try {
+      const { error } = await removeTeamMember(memberId);
+      if (error) {
+        alert(error.message || 'Failed to remove player');
+      } else {
+        alert('Player removed successfully');
+        loadTeamData(); // Refresh the list
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setRemovingMember(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -110,9 +148,14 @@ export default function TeamProfile({ onBack }: { onBack: () => void }) {
             <h1 className="text-3xl mb-2 text-white">{team.name}</h1>
             <p className="text-zinc-500">Your Team Profile</p>
           </div>
-          <button className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-3 rounded-xl active:scale-95 transition-transform">
-            <Edit className="w-5 h-5" />
-          </button>
+          {onEditTeam && (
+            <button 
+              onClick={onEditTeam}
+              className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-3 rounded-xl active:scale-95 transition-transform"
+            >
+              <Edit className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -182,7 +225,7 @@ export default function TeamProfile({ onBack }: { onBack: () => void }) {
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="text-zinc-400">Total Matches</span>
-                <span className="text-white">{team.wins + team.losses + team.draws || 0}</span>
+                <span className="text-white">{team.wins + team.losses + (team.draws || 0)}</span>
               </div>
               <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
                 <div className="bg-gradient-to-r from-[#FF6600] to-[#cc5200] h-full rounded-full" style={{ width: '100%' }}></div>
@@ -209,46 +252,88 @@ export default function TeamProfile({ onBack }: { onBack: () => void }) {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl">Team Players</h2>
-            <button className="text-[#00FF57] text-sm">+ Add Player</button>
+            {onInvitePlayers && (
+              <button 
+                onClick={onInvitePlayers}
+                className="text-[#00FF57] text-sm flex items-center gap-1 active:scale-95 transition-transform"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Invite Player</span>
+              </button>
+            )}
           </div>
 
           {members.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {members.map((member) => {
                 const player = member.players;
                 const profile = player?.profiles;
+                const isCaptain = member.role === 'captain';
+                
                 return (
                   <div key={member.id} className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1">
                         {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt={profile.full_name} className="w-10 h-10 rounded-lg object-cover" />
+                          <img src={profile.avatar_url} alt={profile.full_name} className="w-12 h-12 rounded-lg object-cover" />
                         ) : (
-                          <div className="w-10 h-10 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center">
-                            <span className="text-black">{profile?.full_name?.charAt(0) || 'P'}</span>
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center">
+                            <span className="text-black font-bold">{profile?.full_name?.charAt(0) || 'P'}</span>
                           </div>
                         )}
-                        <div>
-                          <p className="text-sm mb-1">{profile?.full_name || 'Unknown Player'}</p>
-                          <p className="text-xs text-zinc-500">{player?.position || 'N/A'} {member.role === 'captain' && '• Captain'}</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-medium">{profile?.full_name || 'Unknown Player'}</p>
+                            {isCaptain && (
+                              <span className="bg-[#00FF57] text-black px-2 py-0.5 rounded-full text-xs font-medium">
+                                Captain
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <span>{player?.position || 'N/A'}</span>
+                            {player?.rating && (
+                              <>
+                                <span>•</span>
+                                <span className="text-[#00FF57]">Rating: {player.rating.toFixed(1)}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-3">
-                          <div className="text-center">
-                            <p className="text-sm text-white">{player?.goals || 0}</p>
-                            <p className="text-xs text-zinc-500">Goals</p>
-                          </div>
-                          {player?.mvps > 0 && (
-                            <div className="text-center">
-                              <div className="flex items-center gap-1">
-                                <Award className="w-4 h-4 text-[#FF6600]" />
-                                <span className="text-sm text-[#FF6600]">{player.mvps}</span>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="flex items-center gap-3">
+                            {player?.goals !== undefined && (
+                              <div className="text-center">
+                                <p className="text-sm text-white font-medium">{player.goals || 0}</p>
+                                <p className="text-xs text-zinc-500">Goals</p>
                               </div>
-                              <p className="text-xs text-zinc-500">MVP</p>
-                            </div>
-                          )}
+                            )}
+                            {player?.mvps > 0 && (
+                              <div className="text-center">
+                                <div className="flex items-center gap-1 justify-center">
+                                  <Award className="w-4 h-4 text-[#FF6600]" />
+                                  <span className="text-sm text-[#FF6600] font-medium">{player.mvps}</span>
+                                </div>
+                                <p className="text-xs text-zinc-500">MVP</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                        {!isCaptain && (
+                          <button
+                            onClick={() => handleRemoveMember(member.id, profile?.full_name || 'Player')}
+                            disabled={removingMember === member.id}
+                            className="p-2 text-red-400 hover:text-red-300 active:scale-95 transition-transform disabled:opacity-50"
+                          >
+                            {removingMember === member.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -257,15 +342,31 @@ export default function TeamProfile({ onBack }: { onBack: () => void }) {
             </div>
           ) : (
             <div className="text-center py-8 text-zinc-500 bg-zinc-900/50 rounded-xl border border-zinc-800">
-              No players added yet. Invite players through the Player Marketplace.
+              <Users className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+              <p className="mb-2">No players added yet.</p>
+              {onInvitePlayers && (
+                <button 
+                  onClick={onInvitePlayers}
+                  className="text-[#00FF57] text-sm flex items-center gap-1 mx-auto"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Invite players through the Player Marketplace</span>
+                </button>
+              )}
             </div>
           )}
         </div>
 
         {/* Edit Team Button */}
-        <button className="w-full bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] py-4 rounded-xl active:scale-95 transition-transform mb-6">
-          Edit Team Details
-        </button>
+        {onEditTeam && (
+          <button 
+            onClick={onEditTeam}
+            className="w-full bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] py-4 rounded-xl active:scale-95 transition-transform mb-6 flex items-center justify-center gap-2"
+          >
+            <Edit className="w-5 h-5" />
+            <span>Edit Team Details</span>
+          </button>
+        )}
       </div>
     </div>
   );

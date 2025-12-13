@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, Plus, X, Upload, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { createTeam, uploadFile } from '../lib/api';
+import { createTeam, updateTeam, uploadFile } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
 interface Player {
@@ -14,8 +14,11 @@ interface Player {
 export default function TeamRegistration({ onBack, onComplete }: { onBack: () => void; onComplete?: () => void }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const editMode = sessionStorage.getItem('editTeam') === 'true';
   
+  const [teamId, setTeamId] = useState<string | null>(null);
   const [teamName, setTeamName] = useState('');
   const [ageGroup, setAgeGroup] = useState('Open');
   const [teamLevel, setTeamLevel] = useState(5);
@@ -23,6 +26,50 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+
+  useEffect(() => {
+    if (editMode && user) {
+      loadTeamData();
+    } else {
+      setInitialLoading(false);
+    }
+  }, [editMode, user]);
+
+  const loadTeamData = async () => {
+    if (!user) return;
+    
+    try {
+      setInitialLoading(true);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        const { data: team } = await supabase
+          .from('teams')
+          .select('*')
+          .eq('captain_id', profile.id)
+          .single();
+
+        if (team) {
+          setTeamId(team.id);
+          setTeamName(team.name || '');
+          setAgeGroup(team.age_group || 'Open');
+          setTeamLevel(team.team_level || 5);
+          setArea(team.area || '');
+          if (team.logo_url) {
+            setLogoPreview(team.logo_url);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading team data:', error);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -94,43 +141,76 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
         }
       }
 
-      // Create team
-      // Note: If area field doesn't exist in teams table, add it via SQL: ALTER TABLE teams ADD COLUMN area TEXT;
-      const { data: team, error: teamError } = await createTeam({
-        name: teamName,
-        captain_id: profile.id,
-        logo_url: logoUrl,
-        age_group: ageGroup,
-        team_level: teamLevel,
-        area: area, // This will work once you add the column to the database
-        rating: 5.0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        total_goals: 0,
-        total_mvps: 0,
-      } as any); // Using 'as any' temporarily until database schema is updated
+      if (editMode && teamId) {
+        // Update existing team
+        const updateData: any = {
+          name: teamName,
+          age_group: ageGroup,
+          team_level: teamLevel,
+          area: area,
+        };
+        if (logoUrl) {
+          updateData.logo_url = logoUrl;
+        }
 
-      if (teamError || !team) {
-        setError(teamError?.message || 'Failed to create team');
-        setLoading(false);
-        return;
-      }
+        const { data: updatedTeam, error: updateError } = await updateTeam(teamId, updateData);
 
-      // Note: Players will need to be registered separately as they need player profiles
-      // For now, we just create the team. Players can be added later through the player marketplace
+        if (updateError || !updatedTeam) {
+          setError(updateError?.message || 'Failed to update team');
+          setLoading(false);
+          return;
+        }
 
-      // Success - call onComplete if provided, otherwise go back
-      if (onComplete) {
-        onComplete();
+        alert('Team updated successfully!');
+        sessionStorage.removeItem('editTeam');
+        if (onComplete) {
+          onComplete();
+        } else {
+          onBack();
+        }
       } else {
-        onBack();
+        // Create new team
+        const { data: team, error: teamError } = await createTeam({
+          name: teamName,
+          captain_id: profile.id,
+          logo_url: logoUrl,
+          age_group: ageGroup,
+          team_level: teamLevel,
+          area: area,
+          rating: 5.0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          total_goals: 0,
+          total_mvps: 0,
+        } as any);
+
+        if (teamError || !team) {
+          setError(teamError?.message || 'Failed to create team');
+          setLoading(false);
+          return;
+        }
+
+        // Success - call onComplete if provided, otherwise go back
+        if (onComplete) {
+          onComplete();
+        } else {
+          onBack();
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00FF57]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">
@@ -139,7 +219,7 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
         <button onClick={onBack} className="text-[#00FF57]">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-xl">Register Team</h1>
+        <h1 className="text-xl">{editMode ? 'Edit Team' : 'Register Team'}</h1>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -282,7 +362,7 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
                 <span>Creating Team...</span>
               </>
             ) : (
-              <span>Create Team</span>
+              <span>{editMode ? 'Update Team' : 'Create Team'}</span>
             )}
           </button>
         </div>
