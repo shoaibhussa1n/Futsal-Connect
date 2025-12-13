@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Users, TrendingUp, Search, UserPlus, Loader2, Bell } from 'lucide-react';
-import { getTeams } from '../lib/api';
+import { getTeams, getMatchRequests } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -14,6 +14,7 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
   const [teams, setTeams] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [userTeamId, setUserTeamId] = useState<string | null>(null);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   useEffect(() => {
     loadTeams();
@@ -40,6 +41,8 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
 
           if (team) {
             setUserTeamId(team.id);
+            // Load pending match requests count
+            loadMatchRequestsCount(team.id);
           }
         }
       }
@@ -57,6 +60,45 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
       setLoading(false);
     }
   };
+
+  const loadMatchRequestsCount = async (teamId: string) => {
+    try {
+      const { data: requests } = await getMatchRequests(teamId);
+      if (requests) {
+        const pendingCount = requests.filter(
+          (req: any) => req.requested_team_id === teamId && req.status === 'pending'
+        ).length;
+        setPendingRequestsCount(pendingCount);
+      } else {
+        setPendingRequestsCount(0);
+      }
+    } catch (error) {
+      console.error('Error loading match requests count:', error);
+    }
+  };
+
+  // Refresh notification count when component comes into focus
+  useEffect(() => {
+    const handleFocus = () => {
+      if (userTeamId) {
+        loadMatchRequestsCount(userTeamId);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && userTeamId) {
+        loadMatchRequestsCount(userTeamId);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userTeamId]);
 
   const filteredTeams = teams
     .filter(team =>
@@ -85,41 +127,47 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
         <h1 className="text-3xl mb-2">
           <span className="text-[#00FF57]">Teams</span>
         </h1>
-        <p className="text-zinc-500">Discover futsal teams in Karachi</p>
+        <div className="flex items-center justify-between">
+          <p className="text-zinc-500">Discover futsal teams in Karachi</p>
+          {onTeamNotifications && userTeamId && (
+            <button
+              onClick={onTeamNotifications}
+              className="relative p-2 text-zinc-400 hover:text-[#00FF57] transition-colors active:scale-95"
+            >
+              <Bell className="w-5 h-5" />
+              {pendingRequestsCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Action Buttons */}
       {userTeamId && (
-        <div className="px-6 pb-4 space-y-3">
+        <div className="px-6 pb-3">
           <button
             onClick={onInvitePlayers}
-            className="w-full bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-xl py-3 text-black font-medium flex items-center justify-center gap-2 active:scale-98 transition-transform shadow-[0_0_20px_rgba(0,255,87,0.2)]"
+            className="w-full bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-xl py-2.5 text-black font-medium flex items-center justify-center gap-2 active:scale-98 transition-transform shadow-[0_0_20px_rgba(0,255,87,0.2)]"
           >
-            <UserPlus className="w-5 h-5" />
+            <UserPlus className="w-4 h-4" />
             Invite Players to Team
           </button>
-          {onTeamNotifications && (
-            <button
-              onClick={onTeamNotifications}
-              className="w-full bg-zinc-900 border-2 border-[#00FF57]/30 rounded-xl py-3 text-[#00FF57] font-medium flex items-center justify-center gap-2 active:scale-98 transition-transform"
-            >
-              <Bell className="w-5 h-5" />
-              Match Requests
-            </button>
-          )}
         </div>
       )}
 
       {/* Search Bar */}
-      <div className="px-6 pb-4">
+      <div className="px-6 pb-3">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <input
             type="text"
             placeholder="Search teams..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900 border-2 border-[#00FF57]/30 rounded-xl pl-12 pr-4 py-3 text-white placeholder-zinc-600 focus:border-[#00FF57] focus:outline-none transition-colors"
+            className="w-full bg-zinc-900 border-2 border-[#00FF57]/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-[#00FF57] focus:outline-none transition-colors"
           />
         </div>
       </div>
