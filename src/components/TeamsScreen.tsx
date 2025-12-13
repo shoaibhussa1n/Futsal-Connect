@@ -58,9 +58,17 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
     }
   };
 
-  const filteredTeams = teams.filter(team =>
-    team.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeams = teams
+    .filter(team =>
+      team.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Sort user's team to the top
+      if (a.id === userTeamId && b.id !== userTeamId) return -1;
+      if (a.id !== userTeamId && b.id === userTeamId) return 1;
+      // For other teams, sort by rating (highest first)
+      return (b.rating || 5.0) - (a.rating || 5.0);
+    });
 
   if (loading) {
     return (
