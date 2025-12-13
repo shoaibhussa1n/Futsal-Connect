@@ -121,7 +121,7 @@ export default function ProfileCompletion({ onComplete }: ProfileCompletionProps
           return;
         }
       } else {
-        // Create profile - use upsert to handle race conditions
+        // Create profile - use upsert to handle case where profile might exist from signup
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .upsert({
@@ -129,44 +129,81 @@ export default function ProfileCompletion({ onComplete }: ProfileCompletionProps
             full_name: fullName,
             email: user.email,
           }, {
-            onConflict: 'user_id'
+            onConflict: 'user_id',
+            ignoreDuplicates: false
           })
           .select()
           .single();
 
         if (createError) {
-          console.error('Profile creation error:', createError);
+          console.error('Profile creation/update error:', createError);
           console.error('Error details:', {
             code: createError.code,
             message: createError.message,
             details: createError.details,
-            hint: createError.hint
+            hint: createError.hint,
+            user_id: user.id
           });
           
           // More helpful error message
           let errorMsg = 'Failed to create profile. ';
           if (createError.code === '42501') {
-            errorMsg += 'Permission denied. Please check your Supabase RLS policies allow users to create their own profiles.';
+            errorMsg += 'Permission denied. The RLS policy is blocking this. Please run the RLS_POLICY_FIX.sql in your Supabase SQL Editor.';
           } else if (createError.code === '23505') {
-            errorMsg += 'Profile already exists. Please refresh the page.';
+            // Unique constraint violation - profile already exists, try to get it
+            console.log('Profile already exists, fetching it...');
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('user_id', user.id)
+              .single();
+            
+            if (existingProfile) {
+              profileId = existingProfile.id;
+              // Update it instead
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ full_name: fullName, email: user.email })
+                .eq('id', profileId);
+              
+              if (updateError) {
+                errorMsg += `Failed to update existing profile: ${updateError.message}`;
+                setError(errorMsg);
+                setLoading(false);
+                return;
+              }
+              // Successfully updated, continue
+            } else {
+              errorMsg += 'Profile exists but could not be retrieved. Please refresh the page.';
+              setError(errorMsg);
+              setLoading(false);
+              return;
+            }
           } else if (createError.message) {
             errorMsg += createError.message;
+            if (createError.hint) {
+              errorMsg += ` (Hint: ${createError.hint})`;
+            }
           } else {
-            errorMsg += 'Please check your database setup and RLS policies.';
+            errorMsg += 'Please check: 1) Supabase RLS policies are set up, 2) Environment variables are correct, 3) Database connection is working.';
           }
           
-          setError(errorMsg);
-          setLoading(false);
-          return;
+          if (createError.code !== '23505' || !profileId) {
+            setError(errorMsg);
+            setLoading(false);
+            return;
+          }
         }
 
-        if (!newProfile) {
-          setError('Failed to create profile: No data returned. Please check your database connection.');
+        if (!profileId && !newProfile) {
+          setError('Failed to create profile: No data returned. Please check your database connection and RLS policies.');
           setLoading(false);
           return;
         }
         
-        profileId = newProfile.id;
+        if (newProfile) {
+          profileId = newProfile.id;
+        }
       }
 
       // Upload photo if provided
