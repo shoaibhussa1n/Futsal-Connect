@@ -3,11 +3,12 @@ import { Edit, LogOut, User, Trophy, Target, Award, UserPlus, Users, Bell, Loade
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
-export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarketplace, onPlayerNotifications }: { 
+export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarketplace, onPlayerNotifications, onEditProfile }: { 
   onLogout: () => void;
   onPlayerRegister?: () => void;
   onPlayerMarketplace?: () => void;
   onPlayerNotifications?: () => void;
+  onEditProfile?: () => void;
 }) {
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -139,7 +140,10 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
               <p className="text-sm text-zinc-600 mt-1">{team.name}</p>
             )}
           </div>
-          <button className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-3 rounded-xl active:scale-95 transition-transform">
+          <button 
+            onClick={onEditProfile}
+            className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-3 rounded-xl active:scale-95 transition-transform"
+          >
             <Edit className="w-5 h-5" />
           </button>
         </div>
@@ -279,7 +283,10 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
             </>
           )}
 
-          <button className="w-full bg-zinc-900 border border-zinc-800 text-white py-4 rounded-xl flex items-center justify-between px-5 active:scale-95 transition-transform">
+          <button 
+            onClick={onEditProfile}
+            className="w-full bg-zinc-900 border border-zinc-800 text-white py-4 rounded-xl flex items-center justify-between px-5 active:scale-95 transition-transform"
+          >
             <span>Edit Profile</span>
             <Edit className="w-5 h-5 text-zinc-500" />
           </button>

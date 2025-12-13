@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, User, MapPin, Target, Calendar, FileText, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { createPlayer, uploadFile } from '../lib/api';
+import { createPlayer, uploadFile, updatePlayer } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
 interface PlayerRegistrationProps {
   onBack: () => void;
   onRegister?: () => void;
+  editMode?: boolean;
 }
 
-export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistrationProps) {
+export default function PlayerRegistration({ onBack, onRegister, editMode = false }: PlayerRegistrationProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +40,52 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
   ];
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // Load existing player data when in edit mode
+  useEffect(() => {
+    const loadPlayerData = async () => {
+      if (!editMode || !user) return;
+
+      try {
+        // Get user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile) {
+          // Get existing player
+          const { data: existingPlayer } = await supabase
+            .from('players')
+            .select('*')
+            .eq('profile_id', profile.id)
+            .single();
+
+          if (existingPlayer) {
+            setFullName(profile.full_name || '');
+            setAge(existingPlayer.age?.toString() || '');
+            setHeight(existingPlayer.height?.toString() || '');
+            setWeight(existingPlayer.weight?.toString() || '');
+            setExperience(existingPlayer.experience || '');
+            setSelectedPosition(existingPlayer.position || '');
+            setSkillLevel(existingPlayer.skill_level || 5);
+            setSelectedDays(existingPlayer.availability_days || []);
+            setPreferredTime(existingPlayer.preferred_time || '');
+            setBio(existingPlayer.bio || '');
+            setArea(existingPlayer.city || '');
+            if (existingPlayer.photo_url) {
+              setPhotoPreview(existingPlayer.photo_url);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading player data:', error);
+      }
+    };
+
+    loadPlayerData();
+  }, [editMode, user]);
 
   const toggleDay = (day: string) => {
     if (selectedDays.includes(day)) {
@@ -100,8 +147,16 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
         .eq('profile_id', profile.id)
         .single();
 
-      if (existingPlayer) {
-        setError('You already have a player profile. Please edit your existing profile instead.');
+      // If not in edit mode and player exists, show error
+      if (!editMode && existingPlayer) {
+        setError('You already have a player profile. Please use edit mode to update it.');
+        setLoading(false);
+        return;
+      }
+
+      // If in edit mode but no player exists, show error
+      if (editMode && !existingPlayer) {
+        setError('No player profile found to edit.');
         setLoading(false);
         return;
       }
@@ -119,26 +174,51 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
         }
       }
 
-      // Create player profile
-      const { data: player, error: playerError } = await createPlayer({
-        profile_id: profile.id,
-        position: selectedPosition,
-        skill_level: skillLevel,
-        age: parseInt(age),
-        height: height ? parseFloat(height) : null,
-        weight: weight ? parseFloat(weight) : null,
-        experience: experience || null,
-        city: area || 'Karachi',
-        availability_days: selectedDays,
-        preferred_time: preferredTime || null,
-        bio: bio || null,
-        photo_url: photoUrl,
-        matches_played: 0,
-        goals: 0,
-        assists: 0,
-        mvps: 0,
-        rating: 5.0,
-      });
+      // Create or update player profile
+      let player;
+      let playerError;
+
+      if (editMode && existingPlayer) {
+        // Update existing player
+        const result = await updatePlayer(existingPlayer.id, {
+          position: selectedPosition,
+          skill_level: skillLevel,
+          age: parseInt(age),
+          height: height ? parseFloat(height) : null,
+          weight: weight ? parseFloat(weight) : null,
+          experience: experience || null,
+          city: area || 'Karachi',
+          availability_days: selectedDays,
+          preferred_time: preferredTime || null,
+          bio: bio || null,
+          photo_url: photoUrl || existingPlayer.photo_url,
+        });
+        player = result.data;
+        playerError = result.error;
+      } else {
+        // Create new player
+        const { data: newPlayer, error: createError } = await createPlayer({
+          profile_id: profile.id,
+          position: selectedPosition,
+          skill_level: skillLevel,
+          age: parseInt(age),
+          height: height ? parseFloat(height) : null,
+          weight: weight ? parseFloat(weight) : null,
+          experience: experience || null,
+          city: area || 'Karachi',
+          availability_days: selectedDays,
+          preferred_time: preferredTime || null,
+          bio: bio || null,
+          photo_url: photoUrl,
+          matches_played: 0,
+          goals: 0,
+          assists: 0,
+          mvps: 0,
+          rating: 5.0,
+        });
+        player = newPlayer;
+        playerError = createError;
+      }
 
       if (playerError || !player) {
         setError(playerError?.message || 'Failed to create player profile');
@@ -169,9 +249,9 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
           ← Back
         </button>
         <h1 className="text-3xl mb-2">
-          Register as <span className="text-[#00FF57]">Player</span>
+          {editMode ? 'Edit' : 'Register as'} <span className="text-[#00FF57]">Player</span>
         </h1>
-        <p className="text-zinc-500">Join the futsal community</p>
+        <p className="text-zinc-500">{editMode ? 'Update your player profile' : 'Join the futsal community'}</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -427,10 +507,10 @@ export default function PlayerRegistration({ onBack, onRegister }: PlayerRegistr
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Registering...</span>
+                <span>{editMode ? 'Updating...' : 'Registering...'}</span>
               </>
             ) : (
-              <span>Register as Player</span>
+              <span>{editMode ? 'Update Profile' : 'Register as Player'}</span>
             )}
           </button>
         </div>

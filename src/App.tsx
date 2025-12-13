@@ -198,13 +198,18 @@ export default function App() {
       case 'playerRegistration':
         return <PlayerRegistration 
           onBack={() => {
+            sessionStorage.removeItem('editPlayer');
             if (hasPlayerProfile || hasTeamProfile) {
               setCurrentScreen('main');
             } else {
               setCurrentScreen('path-selection');
             }
           }} 
-          onRegister={handlePlayerRegistered} 
+          onRegister={() => {
+            sessionStorage.removeItem('editPlayer');
+            handlePlayerRegistered();
+          }}
+          editMode={sessionStorage.getItem('editPlayer') === 'true'}
         />;
       case 'matchRequest':
         return <MatchRequestConfirmation 
@@ -282,6 +287,15 @@ export default function App() {
           onPlayerRegister={() => setCurrentScreen('playerRegistration')}
           onPlayerMarketplace={() => setCurrentScreen('playerMarketplace')}
           onPlayerNotifications={() => setCurrentScreen('playerNotifications')}
+          onEditProfile={() => {
+            // Navigate to player registration in edit mode if player exists, otherwise to profile completion
+            if (hasPlayerProfile) {
+              sessionStorage.setItem('editPlayer', 'true');
+              setCurrentScreen('playerRegistration');
+            } else {
+              setCurrentScreen('profile-completion');
+            }
+          }}
         />;
         break;
       default:
