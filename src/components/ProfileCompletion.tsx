@@ -74,6 +74,10 @@ export default function ProfileCompletion({ onComplete }: ProfileCompletionProps
     setError(null);
 
     try {
+      // First, verify we can access the profiles table
+      console.log('User ID:', user.id);
+      console.log('User email:', user.email);
+      
       // Get or create profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -81,9 +85,20 @@ export default function ProfileCompletion({ onComplete }: ProfileCompletionProps
         .eq('user_id', user.id)
         .single();
 
-      // Log any error when checking for existing profile (non-critical)
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.warn('Profile check error:', profileError);
+      // Log any error when checking for existing profile
+      if (profileError) {
+        if (profileError.code === 'PGRST116') {
+          // No profile found - this is expected for new users
+          console.log('No existing profile found, will create new one');
+        } else {
+          console.warn('Profile check error:', profileError);
+          // If we can't even read, there's a bigger issue
+          if (profileError.code === '42501') {
+            setError('Permission denied accessing profiles. Please check your Supabase RLS policies.');
+            setLoading(false);
+            return;
+          }
+        }
       }
 
       let profileId: string;
@@ -106,26 +121,47 @@ export default function ProfileCompletion({ onComplete }: ProfileCompletionProps
           return;
         }
       } else {
-        // Create profile
+        // Create profile - use upsert to handle race conditions
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             user_id: user.id,
             full_name: fullName,
             email: user.email,
+          }, {
+            onConflict: 'user_id'
           })
           .select()
           .single();
 
         if (createError) {
           console.error('Profile creation error:', createError);
-          setError(`Failed to create profile: ${createError.message || 'Unknown error'}. Please check your database setup and RLS policies.`);
+          console.error('Error details:', {
+            code: createError.code,
+            message: createError.message,
+            details: createError.details,
+            hint: createError.hint
+          });
+          
+          // More helpful error message
+          let errorMsg = 'Failed to create profile. ';
+          if (createError.code === '42501') {
+            errorMsg += 'Permission denied. Please check your Supabase RLS policies allow users to create their own profiles.';
+          } else if (createError.code === '23505') {
+            errorMsg += 'Profile already exists. Please refresh the page.';
+          } else if (createError.message) {
+            errorMsg += createError.message;
+          } else {
+            errorMsg += 'Please check your database setup and RLS policies.';
+          }
+          
+          setError(errorMsg);
           setLoading(false);
           return;
         }
 
         if (!newProfile) {
-          setError('Failed to create profile: No data returned');
+          setError('Failed to create profile: No data returned. Please check your database connection.');
           setLoading(false);
           return;
         }
