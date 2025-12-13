@@ -28,7 +28,8 @@ const createSupabaseClient = (): SupabaseClient => {
     global: {
       headers: {
         'apikey': supabaseAnonKey,
-        'Content-Type': 'application/json',
+        // Don't set Content-Type globally - let Supabase set it automatically
+        // For storage uploads, it needs to be multipart/form-data or the file's MIME type
       },
     },
     db: {
