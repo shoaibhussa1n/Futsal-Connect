@@ -569,11 +569,33 @@ export async function uploadFile(
 ) {
   // Ensure we have a valid File object
   if (!(file instanceof File)) {
+    console.error('Invalid file object:', file);
     return { data: null, error: { message: 'Invalid file object' } };
   }
 
+  // Log file details for debugging
+  console.log('Uploading file:', {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    bucket,
+    path
+  });
+
   // Get the content type from the file
-  const contentType = file.type || 'image/png';
+  let contentType = file.type;
+  
+  // If file.type is empty, try to infer from file extension
+  if (!contentType) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const mimeTypes: { [key: string]: string } = {
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'webp': 'image/webp'
+    };
+    contentType = mimeTypes[extension || ''] || 'image/png';
+  }
   
   // Validate file type
   const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
@@ -581,17 +603,32 @@ export async function uploadFile(
     return { data: null, error: { message: `File type ${contentType} is not supported. Please use PNG, JPEG, or WebP.` } };
   }
 
+  // Ensure we're uploading the actual file, not a JSON object
+  if (file.size === 0) {
+    return { data: null, error: { message: 'File is empty' } };
+  }
+
   try {
+    // Use upload with explicit options
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {
         cacheControl: '3600',
         upsert: true, // Allow overwriting existing files
         contentType: contentType,
+        duplex: 'half', // Required for some browsers
       });
 
     if (error) {
-      console.error('Storage upload error:', error);
+      console.error('Storage upload error details:', {
+        error,
+        message: error.message,
+        statusCode: error.statusCode,
+        bucket,
+        path,
+        contentType,
+        fileSize: file.size
+      });
       return { data: null, error };
     }
 
@@ -603,6 +640,7 @@ export async function uploadFile(
       .from(bucket)
       .getPublicUrl(data.path);
 
+    console.log('Upload successful:', urlData.publicUrl);
     return { data: urlData.publicUrl, error: null };
   } catch (err: any) {
     console.error('Upload exception:', err);
