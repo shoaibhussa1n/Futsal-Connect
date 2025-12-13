@@ -609,25 +609,48 @@ export async function uploadFile(
   }
 
   try {
+    // Create a new File object to ensure it's a proper File instance
+    // This helps avoid any serialization issues
+    const fileToUpload = file instanceof File 
+      ? file 
+      : new File([file], file.name, { type: contentType });
+
     // Use upload with explicit options
+    // Note: Don't set contentType if bucket has MIME restrictions - let Supabase infer it
+    const uploadOptions: any = {
+      cacheControl: '3600',
+      upsert: true, // Allow overwriting existing files
+    };
+
+    // Only set contentType if file.type is available and valid
+    if (fileToUpload.type && allowedTypes.includes(fileToUpload.type)) {
+      uploadOptions.contentType = fileToUpload.type;
+    }
+
+    console.log('Uploading with options:', {
+      bucket,
+      path,
+      fileName: fileToUpload.name,
+      fileType: fileToUpload.type,
+      fileSize: fileToUpload.size,
+      uploadOptions
+    });
+
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: true, // Allow overwriting existing files
-        contentType: contentType,
-        duplex: 'half', // Required for some browsers
-      });
+      .upload(path, fileToUpload, uploadOptions);
 
     if (error) {
       console.error('Storage upload error details:', {
         error,
         message: error.message,
         statusCode: error.statusCode,
+        errorDetails: JSON.stringify(error, null, 2),
         bucket,
         path,
         contentType,
-        fileSize: file.size
+        fileSize: file.size,
+        fileType: file.type
       });
       return { data: null, error };
     }

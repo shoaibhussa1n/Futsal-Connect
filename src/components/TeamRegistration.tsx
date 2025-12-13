@@ -74,11 +74,30 @@ export default function TeamRegistration({ onBack, onComplete }: { onBack: () =>
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        setError('Logo must be less than 2MB');
+      // Validate file type
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setError('Please select a valid image file (PNG, JPEG, or WebP)');
+        e.target.value = ''; // Clear the input
         return;
       }
+      
+      if (file.size > 2 * 1024 * 1024) {
+        setError('Logo must be less than 2MB');
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
+      // Ensure we have a proper File object
+      if (!(file instanceof File)) {
+        setError('Invalid file selected');
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
       setLogoFile(file);
+      setError(null); // Clear any previous errors
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoPreview(reader.result as string);
