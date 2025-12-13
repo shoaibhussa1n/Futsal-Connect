@@ -41,28 +41,49 @@ export default function App() {
     if (currentScreen === 'splash') {
       const timer = setTimeout(() => {
         if (hasSeenOnboarding) {
-          setCurrentScreen(user ? 'checking' : 'login');
+          // Wait for auth to finish loading before deciding
+          if (!authLoading) {
+            setCurrentScreen(user ? 'checking' : 'login');
+          }
         } else {
           setCurrentScreen('onboarding');
         }
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [currentScreen, hasSeenOnboarding, user]);
+  }, [currentScreen, hasSeenOnboarding, user, authLoading]);
+
+  // Handle auth loading completion
+  useEffect(() => {
+    if (!authLoading && currentScreen === 'splash' && hasSeenOnboarding) {
+      setCurrentScreen(user ? 'checking' : 'login');
+    }
+  }, [authLoading, currentScreen, hasSeenOnboarding, user]);
 
   // Check profile status when user is authenticated
   useEffect(() => {
     const checkUserProfile = async () => {
       if (!user || authLoading) {
         setCheckingProfile(false);
+        if (!user && !authLoading) {
+          setCurrentScreen('login');
+        }
         return;
       }
 
       try {
         setCheckingProfile(true);
         
+        // Add timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+          console.warn('Profile check timeout, redirecting to login');
+          setCheckingProfile(false);
+          setCurrentScreen('login');
+        }, 10000); // 10 second timeout
+        
         // Check if profile exists and is complete
         const isComplete = await checkProfileComplete(user.id);
+        clearTimeout(timeoutId);
         setProfileComplete(isComplete);
 
         if (isComplete) {
@@ -86,7 +107,8 @@ export default function App() {
         }
       } catch (error) {
         console.error('Error checking profile:', error);
-        setCurrentScreen('profile-completion');
+        // On error, go to login to let user try again
+        setCurrentScreen('login');
       } finally {
         setCheckingProfile(false);
       }
@@ -94,6 +116,10 @@ export default function App() {
 
     if (user && currentScreen === 'checking') {
       checkUserProfile();
+    } else if (!user && !authLoading && currentScreen === 'checking') {
+      // If no user and auth is done loading, go to login
+      setCurrentScreen('login');
+      setCheckingProfile(false);
     }
   }, [user, authLoading, currentScreen]);
 
@@ -270,8 +296,8 @@ export default function App() {
     );
   };
 
-  // Show loading state while checking auth or profile
-  if (authLoading || checkingProfile) {
+  // Show loading state while checking auth or profile (but with timeout)
+  if (authLoading || (checkingProfile && currentScreen === 'checking')) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
@@ -279,6 +305,9 @@ export default function App() {
             <span className="text-2xl">⚽</span>
           </div>
           <p className="text-zinc-400">Loading...</p>
+          {authLoading && (
+            <p className="text-zinc-600 text-sm mt-2">Checking authentication...</p>
+          )}
         </div>
       </div>
     );

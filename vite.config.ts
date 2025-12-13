@@ -7,9 +7,9 @@
   export default defineConfig({
     plugins: [
       react(),
-      VitePWA({
+        VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
+        includeAssets: ['favicon.ico', 'icon.svg'],
         manifest: {
           name: 'Futsal Hub Karachi',
           short_name: 'Futsal Hub',
@@ -19,14 +19,9 @@
           display: 'standalone',
           icons: [
             {
-              src: '/icon-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-            },
-            {
-              src: '/icon-512.png',
-              sizes: '512x512',
-              type: 'image/png',
+              src: '/icon.svg',
+              sizes: 'any',
+              type: 'image/svg+xml',
             },
           ],
         },
