@@ -207,23 +207,23 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
         <p className="text-zinc-500">Find and recruit talented players</p>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-6 py-4 space-y-3">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none z-10" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search players by name..."
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-12 py-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#00FF57] transition-colors"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-12 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#00FF57]/50 focus:ring-1 focus:ring-[#00FF57]/20 transition-all"
           />
         </div>
 
         {/* Filter Toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 px-4 flex items-center justify-between text-zinc-400 active:scale-98 transition-transform"
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-4 flex items-center justify-between text-zinc-400 active:scale-98 transition-transform text-sm"
         >
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5" />
@@ -234,7 +234,7 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-6">
+          <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-4">
             {/* Age Range */}
             <div>
               <label className="text-sm text-zinc-400 mb-3 block">
@@ -344,9 +344,9 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
         )}
 
         {/* Results Count */}
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-zinc-500">{filteredPlayers.length} players found</p>
-          <button className="text-sm text-[#00FF57]">Sort by Rating</button>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-zinc-500">{filteredPlayers.length} players found</p>
+          <button className="text-xs text-[#00FF57]">Sort by Rating</button>
         </div>
 
         {/* Player Cards */}
@@ -356,84 +356,84 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
             <p className="text-zinc-500">No players found matching your criteria</p>
           </div>
         ) : (
-          <div className="space-y-4">
+        <div className="space-y-3">
             {filteredPlayers.map((player) => (
-              <div
-                key={player.id}
-                className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-5 border border-zinc-800"
-              >
-                <div className="flex gap-4 mb-4">
-                  {/* Player Photo */}
+            <div
+              key={player.id}
+              className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-3 border border-zinc-800 hover:border-zinc-700 transition-colors"
+            >
+              <div className="flex gap-3 mb-3">
+                {/* Player Photo */}
                   {player.photo_url ? (
-                    <img src={player.photo_url} alt={player.profiles?.full_name} className="w-16 h-16 rounded-xl object-cover" />
+                    <img src={player.photo_url} alt={player.profiles?.full_name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
                   ) : (
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-xl flex items-center justify-center flex-shrink-0">
-                      <User className="w-8 h-8 text-black" />
-                    </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <User className="w-6 h-6 text-black" />
+                </div>
                   )}
 
-                  {/* Player Info */}
-                  <div className="flex-1">
-                    <h3 className="text-lg mb-1">{player.profiles?.full_name || 'Unknown Player'}</h3>
-                    <p className="text-sm text-zinc-500 mb-2">
+                {/* Player Info */}
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold mb-0.5 truncate text-white">{player.profiles?.full_name || 'Unknown Player'}</h3>
+                    <p className="text-xs text-zinc-400 mb-2">
                       {player.age || 'N/A'} years • {player.position || 'Any Position'}
                     </p>
-                    <div className="flex gap-2">
-                      <span className="bg-[#00FF57]/20 text-[#00FF57] px-2 py-1 rounded-md text-xs">
+                  <div className="flex gap-1.5 flex-wrap">
+                    <span className="bg-[#00FF57]/20 text-[#00FF57] px-2 py-0.5 rounded text-xs font-medium">
                         Skill: {player.skill_level || 5}/10
-                      </span>
-                      <span className="bg-zinc-800 text-zinc-400 px-2 py-1 rounded-md text-xs">
+                    </span>
+                      <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-xs">
                         Rating: {player.rating?.toFixed(1) || '5.0'}
-                      </span>
-                    </div>
+                    </span>
                   </div>
                 </div>
+              </div>
 
-                {/* Stats */}
-                <div className="flex gap-4 mb-4 p-3 bg-black/50 rounded-lg">
-                  <div className="flex-1 text-center">
-                    <div className="text-xl text-white mb-1">{player.matches_played || 0}</div>
-                    <div className="text-xs text-zinc-500">Matches</div>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <div className="text-xl text-[#00FF57] mb-1">{player.goals || 0}</div>
+              {/* Stats */}
+              <div className="flex gap-2.5 mb-3 p-2.5 bg-black/50 rounded-lg border border-zinc-800/50">
+                <div className="flex-1 text-center">
+                    <div className="text-base font-semibold text-white mb-0.5">{player.matches_played || 0}</div>
+                  <div className="text-xs text-zinc-500">Matches</div>
+                </div>
+                <div className="flex-1 text-center">
+                    <div className="text-base font-semibold text-[#00FF57] mb-0.5">{player.goals || 0}</div>
                     <div className="text-xs text-zinc-500">Goals</div>
                   </div>
                   <div className="flex-1 text-center">
-                    <div className="text-xl text-[#FF6600] mb-1">{player.mvps || 0}</div>
+                    <div className="text-base font-semibold text-[#FF6600] mb-0.5">{player.mvps || 0}</div>
                     <div className="text-xs text-zinc-500">MVPs</div>
-                  </div>
                 </div>
+              </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
                     onClick={() => handleViewPlayer(player.id)}
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg py-2.5 text-white text-sm active:scale-95 transition-transform"
-                  >
-                    View Profile
-                  </button>
-                  <button
+                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg py-2 text-white text-xs font-medium active:scale-95 transition-transform hover:bg-zinc-750"
+                >
+                  View Profile
+                </button>
+                <button
                     onClick={() => handleSendRequest(player.id)}
                     disabled={sendingRequest === player.id || !userTeam}
-                    className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2.5 text-black text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                    className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2 text-black text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed hover:from-[#00cc44] hover:to-[#00aa33]"
+                >
                     {sendingRequest === player.id ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         Sending...
                       </>
                     ) : (
                       <>
-                        <Send className="w-4 h-4" />
-                        Send Request
+                  <Send className="w-3.5 h-3.5" />
+                  Send Request
                       </>
                     )}
-                  </button>
-                </div>
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
         )}
       </div>
     </div>
