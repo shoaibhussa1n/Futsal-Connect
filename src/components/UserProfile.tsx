@@ -136,14 +136,14 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
   return (
     <div className="min-h-screen bg-black pb-20">
       {/* Header with Logo and App Name */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black px-6 pt-12 pb-4">
+      <div className="bg-black px-6 pt-12 pb-4">
         <div className="flex items-center gap-3">
           <img 
             src={logo} 
             alt="Futsal Connect" 
-            className="w-10 h-10 object-contain"
+            className="w-14 h-14 object-contain"
           />
-          <h1 className="text-xl font-bold text-white">Futsal Connect</h1>
+          <h1 className="text-lg font-semibold text-[#00FF57]">Futsal Connect</h1>
         </div>
       </div>
 
