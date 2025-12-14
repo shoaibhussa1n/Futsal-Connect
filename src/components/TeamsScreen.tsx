@@ -175,13 +175,13 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
       {/* Search Bar */}
       <div className="px-6 pb-4">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Search teams..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-[#00FF57]/50 focus:outline-none focus:ring-1 focus:ring-[#00FF57]/20 transition-all"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-12 pr-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-[#00FF57]/50 focus:outline-none focus:ring-1 focus:ring-[#00FF57]/20 transition-all"
           />
         </div>
       </div>
