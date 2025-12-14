@@ -24,7 +24,7 @@ import TeamNotifications from './components/TeamNotifications';
 import { checkProfileComplete, checkPlayerProfile, checkTeamProfile, getProfile } from './lib/api';
 import { supabase } from './lib/supabase';
 import { Loader2 } from 'lucide-react';
-import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2dbb9dc.png';
+import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2b2dbb9dc.png';
 
 export default function App() {
   const { user, loading: authLoading } = useAuth();

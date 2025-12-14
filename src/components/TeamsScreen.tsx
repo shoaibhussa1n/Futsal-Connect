@@ -3,7 +3,7 @@ import { Users, TrendingUp, Search, UserPlus, Loader2, Bell } from 'lucide-react
 import { getTeams, getMatchRequests } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2dbb9dc.png';
+import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2b2dbb9dc.png';
 
 export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotifications }: { 
   onViewTeam: (teamId: string) => void;

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Edit, LogOut, User, Trophy, Target, Award, UserPlus, Users, Bell, Loader2, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2dbb9dc.png';
+import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2b2dbb9dc.png';
 
 export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarketplace, onPlayerNotifications, onEditProfile, onViewTeamProfile }: { 
   onLogout: () => void;
