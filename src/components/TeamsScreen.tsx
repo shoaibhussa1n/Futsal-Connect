@@ -3,6 +3,7 @@ import { Users, TrendingUp, Search, UserPlus, Loader2, Bell } from 'lucide-react
 import { getTeams, getMatchRequests } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2dbb9dc.png';
 
 export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotifications }: { 
   onViewTeam: (teamId: string) => void;
@@ -115,7 +116,20 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#00FF57]" />
+        <div className="text-center">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 bg-[#00FF57] blur-2xl opacity-30 rounded-full animate-pulse"></div>
+            <div className="relative w-16 h-16 mx-auto">
+              <img 
+                src={logo} 
+                alt="Futsal Connect" 
+                className="w-full h-full object-contain animate-pulse"
+                style={{ animationDuration: '2s' }}
+              />
+            </div>
+          </div>
+          <p className="text-zinc-400 text-sm">Loading teams...</p>
+        </div>
       </div>
     );
   }

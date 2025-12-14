@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Edit, LogOut, User, Trophy, Target, Award, UserPlus, Users, Bell, Loader2, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2dbb9dc.png';
 
 export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarketplace, onPlayerNotifications, onEditProfile, onViewTeamProfile }: { 
   onLogout: () => void;
@@ -134,8 +135,17 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
 
   return (
     <div className="min-h-screen bg-black pb-20">
-      {/* Header with Cover */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black h-24"></div>
+      {/* Header with Logo and App Name */}
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black px-6 pt-12 pb-4">
+        <div className="flex items-center gap-3">
+          <img 
+            src={logo} 
+            alt="Futsal Connect" 
+            className="w-10 h-10 object-contain"
+          />
+          <h1 className="text-xl font-bold text-white">Futsal Connect</h1>
+        </div>
+      </div>
 
       <div className="px-6 pt-6 pb-6">
         {/* User Info with Avatar */}

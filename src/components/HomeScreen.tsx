@@ -155,8 +155,18 @@ export default function HomeScreen({
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#00FF57] mx-auto mb-4" />
-          <p className="text-zinc-400">Loading...</p>
+          <div className="relative mb-4">
+            <div className="absolute inset-0 bg-[#00FF57] blur-2xl opacity-30 rounded-full animate-pulse"></div>
+            <div className="relative w-16 h-16 mx-auto">
+              <img 
+                src={logo} 
+                alt="Futsal Connect" 
+                className="w-full h-full object-contain animate-pulse"
+                style={{ animationDuration: '2s' }}
+              />
+            </div>
+          </div>
+          <p className="text-zinc-400 text-sm">Loading...</p>
         </div>
       </div>
     );
@@ -231,35 +241,35 @@ export default function HomeScreen({
         {userTeam ? (
           <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl p-6 mb-8 border border-zinc-800">
             <div className="flex items-center justify-between mb-6">
-              <div 
-                onClick={onViewTeamProfile}
+        <div 
+          onClick={onViewTeamProfile}
                 className="flex-1 cursor-pointer active:scale-98 transition-transform"
-              >
+        >
                 <h3 className="text-xl mb-1">{userTeam.name}</h3>
-                <p className="text-zinc-500 text-sm">Your Team</p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl text-[#00FF57] mb-1">{userTeam.rating?.toFixed(1) || '5.0'}</div>
-                <p className="text-zinc-500 text-xs">Rating</p>
-              </div>
+              <p className="text-zinc-500 text-sm">Your Team</p>
             </div>
+            <div className="text-right">
+                <div className="text-3xl text-[#00FF57] mb-1">{userTeam.rating?.toFixed(1) || '5.0'}</div>
+              <p className="text-zinc-500 text-xs">Rating</p>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-4 gap-4">
-              <div className="text-center">
+          <div className="grid grid-cols-4 gap-4">
+            <div className="text-center">
                 <div className="text-2xl text-white mb-1">{userTeam.wins || 0}</div>
-                <p className="text-zinc-500 text-xs">Wins</p>
-              </div>
-              <div className="text-center">
+              <p className="text-zinc-500 text-xs">Wins</p>
+            </div>
+            <div className="text-center">
                 <div className="text-2xl text-zinc-400 mb-1">{userTeam.losses || 0}</div>
-                <p className="text-zinc-500 text-xs">Losses</p>
-              </div>
-              <div className="text-center">
+              <p className="text-zinc-500 text-xs">Losses</p>
+            </div>
+            <div className="text-center">
                 <div className="text-2xl text-[#FF6600] mb-1">#{userTeam.rank || '-'}</div>
-                <p className="text-zinc-500 text-xs">Rank</p>
-              </div>
-              <div className="text-center">
+              <p className="text-zinc-500 text-xs">Rank</p>
+            </div>
+            <div className="text-center">
                 <div className="text-2xl text-[#00FF57] mb-1">{userTeam.total_mvps || 0}</div>
-                <p className="text-zinc-500 text-xs">MVPs</p>
+              <p className="text-zinc-500 text-xs">MVPs</p>
               </div>
             </div>
           </div>
@@ -271,7 +281,7 @@ export default function HomeScreen({
             <Users className="w-12 h-12 text-[#00FF57] mx-auto mb-3 opacity-50" />
             <p className="text-zinc-400 mb-2">You don't have a team yet</p>
             <p className="text-[#00FF57] text-sm">Tap to create your team</p>
-          </div>
+        </div>
         )}
 
         {/* Upcoming Matches */}
@@ -279,12 +289,12 @@ export default function HomeScreen({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg text-zinc-400">Upcoming Matches</h2>
             {upcomingMatches.length > 0 && (
-              <button className="text-[#00FF57] text-sm">View All</button>
+            <button className="text-[#00FF57] text-sm">View All</button>
             )}
           </div>
 
           {upcomingMatches.length > 0 ? (
-            <div className="space-y-3">
+          <div className="space-y-3">
               {upcomingMatches.slice(0, 2).map((match) => {
                 const isTeamA = match.team_a_id === userTeam?.id;
                 const opponent = isTeamA ? match.team_b : match.team_a;
@@ -293,44 +303,44 @@ export default function HomeScreen({
 
                 return (
                   <div key={match.id} className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-                    <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3">
                       <span className="text-xs text-zinc-500">
                         {match.scheduled_date ? formatDate(match.scheduled_date) : 'TBD'}, {match.scheduled_time ? formatTime(match.scheduled_time) : ''}
                       </span>
                       <span className={`text-xs px-2 py-1 rounded-full ${statusColor}`}>
                         {statusText}
                       </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center">
-                          <Users className="w-5 h-5 text-black" />
-                        </div>
-                        <div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-black" />
+                  </div>
+                  <div>
                           <p className="text-sm">{userTeam?.name || 'Your Team'}</p>
                           <p className="text-xs text-zinc-500">Rating: {userTeam?.rating?.toFixed(1) || '5.0'}</p>
-                        </div>
-                      </div>
-                      <div className="text-zinc-500">VS</div>
-                      <div className="flex items-center gap-2">
-                        <div>
+                  </div>
+                </div>
+                <div className="text-zinc-500">VS</div>
+                <div className="flex items-center gap-2">
+                  <div>
                           <p className="text-sm text-right">{opponent?.name || 'Opponent'}</p>
                           <p className="text-xs text-zinc-500 text-right">Rating: {opponent?.rating?.toFixed(1) || '5.0'}</p>
-                        </div>
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#007BFF] to-[#0056b3] rounded-lg flex items-center justify-center">
-                          <Users className="w-5 h-5 text-white" />
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#007BFF] to-[#0056b3] rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+              </div>
                     {match.location && (
-                      <div className="mt-3 pt-3 border-t border-zinc-800">
+              <div className="mt-3 pt-3 border-t border-zinc-800">
                         <p className="text-xs text-zinc-500">📍 {match.location}</p>
-                      </div>
+              </div>
                     )}
                   </div>
                 );
               })}
-            </div>
+                  </div>
           ) : (
             <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
               <Target className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
@@ -361,24 +371,24 @@ export default function HomeScreen({
           </div>
 
           {topTeams.length > 0 ? (
-            <div className="space-y-3">
+          <div className="space-y-3">
               {topTeams.map((team, index) => (
                 <div key={team.id} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                     index === 0 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' :
                     index === 1 ? 'bg-gradient-to-br from-zinc-400 to-zinc-500' :
-                    'bg-gradient-to-br from-orange-600 to-orange-700'
-                  }`}>
+                  'bg-gradient-to-br from-orange-600 to-orange-700'
+                }`}>
                     <span className="text-sm text-black">{index + 1}</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm">{team.name}</p>
-                    <p className="text-xs text-zinc-500">{team.wins || 0} wins</p>
-                  </div>
-                  <div className="text-[#00FF57]">{team.rating?.toFixed(1) || '5.0'}</div>
                 </div>
-              ))}
-            </div>
+                <div className="flex-1">
+                  <p className="text-sm">{team.name}</p>
+                    <p className="text-xs text-zinc-500">{team.wins || 0} wins</p>
+                </div>
+                  <div className="text-[#00FF57]">{team.rating?.toFixed(1) || '5.0'}</div>
+              </div>
+            ))}
+          </div>
           ) : (
             <p className="text-zinc-500 text-sm text-center py-4">No teams yet</p>
           )}

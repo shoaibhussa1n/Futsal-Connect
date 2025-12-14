@@ -24,6 +24,7 @@ import TeamNotifications from './components/TeamNotifications';
 import { checkProfileComplete, checkPlayerProfile, checkTeamProfile, getProfile } from './lib/api';
 import { supabase } from './lib/supabase';
 import { Loader2 } from 'lucide-react';
+import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2dbb9dc.png';
 
 export default function App() {
   const { user, loading: authLoading } = useAuth();
@@ -203,8 +204,18 @@ export default function App() {
         return (
           <div className="min-h-screen bg-black text-white flex items-center justify-center">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-[#00FF57] mx-auto mb-4" />
-              <p className="text-zinc-400">Checking profile...</p>
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-[#00FF57] blur-2xl opacity-30 rounded-full animate-pulse"></div>
+                <div className="relative w-20 h-20 mx-auto">
+                  <img 
+                    src={logo} 
+                    alt="Futsal Connect" 
+                    className="w-full h-full object-contain animate-pulse"
+                    style={{ animationDuration: '2s' }}
+                  />
+                </div>
+              </div>
+              <p className="text-zinc-400 text-sm">Checking profile...</p>
             </div>
           </div>
         );
@@ -421,12 +432,20 @@ export default function App() {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#00FF57] to-[#00cc44] flex items-center justify-center animate-pulse">
-            <span className="text-2xl">⚽</span>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-[#00FF57] blur-2xl opacity-30 rounded-full animate-pulse"></div>
+            <div className="relative w-20 h-20 mx-auto">
+              <img 
+                src={logo} 
+                alt="Futsal Connect" 
+                className="w-full h-full object-contain animate-pulse"
+                style={{ animationDuration: '2s' }}
+              />
+            </div>
           </div>
-          <p className="text-zinc-400">Loading...</p>
+          <p className="text-zinc-400 text-sm">Loading...</p>
           {authLoading && (
-            <p className="text-zinc-600 text-sm mt-2">Checking authentication...</p>
+            <p className="text-zinc-600 text-xs mt-2">Checking authentication...</p>
           )}
         </div>
       </div>
