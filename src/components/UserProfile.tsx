@@ -237,34 +237,28 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
           </div>
         )}
 
-        {/* Personal Info Section */}
-        <div className="bg-zinc-900 rounded-xl p-4 mb-6 border border-zinc-800">
-          <h3 className="text-sm font-semibold mb-3 text-white">Personal Information</h3>
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
-              <span className="text-zinc-400 text-xs">Email</span>
-              <span className="text-white text-xs font-medium truncate ml-2">{profile?.email || user?.email || 'N/A'}</span>
-            </div>
-            {profile?.phone && (
-              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
-                <span className="text-zinc-400 text-xs">Phone</span>
-                <span className="text-white text-xs font-medium">{profile.phone}</span>
+        {/* Player Marketplace & Notifications */}
+        {player && (
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button 
+              onClick={onPlayerMarketplace}
+              className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-zinc-800"
+            >
+              <Users className="w-6 h-6 text-[#00A3FF]" />
+              <span className="text-xs font-medium text-white text-center">Marketplace</span>
+            </button>
+            <button 
+              onClick={onPlayerNotifications}
+              className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-zinc-800 relative"
+            >
+              <div className="relative">
+                <Bell className="w-6 h-6 text-[#FF6600]" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
               </div>
-            )}
-            {player && (
-              <>
-                <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
-                  <span className="text-zinc-400 text-xs">Position</span>
-                  <span className="text-white text-xs font-medium">{player.position || 'N/A'}</span>
-                </div>
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-zinc-400 text-xs">Age Group</span>
-                  <span className="text-white text-xs font-medium">{player.age ? `${player.age} years` : 'N/A'}</span>
-                </div>
-              </>
-            )}
+              <span className="text-xs font-medium text-white text-center">Notifications</span>
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Recent Matches */}
         {recentMatches.length > 0 && (
@@ -319,27 +313,34 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
             </div>
           )}
 
-          {player && (
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <button 
-                onClick={onPlayerMarketplace}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-zinc-800"
-              >
-                <Users className="w-6 h-6 text-[#00A3FF]" />
-                <span className="text-xs font-medium text-white text-center">Marketplace</span>
-              </button>
-              <button 
-                onClick={onPlayerNotifications}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-zinc-800 relative"
-              >
-                <div className="relative">
-                  <Bell className="w-6 h-6 text-[#FF6600]" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+          {/* Personal Info Section */}
+          <div className="bg-zinc-900 rounded-xl p-4 mb-6 border border-zinc-800">
+            <h3 className="text-sm font-semibold mb-3 text-white">Personal Information</h3>
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
+                <span className="text-zinc-400 text-xs">Email</span>
+                <span className="text-white text-xs font-medium truncate ml-2">{profile?.email || user?.email || 'N/A'}</span>
+              </div>
+              {profile?.phone && (
+                <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
+                  <span className="text-zinc-400 text-xs">Phone</span>
+                  <span className="text-white text-xs font-medium">{profile.phone}</span>
                 </div>
-                <span className="text-xs font-medium text-white text-center">Notifications</span>
-              </button>
+              )}
+              {player && (
+                <>
+                  <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
+                    <span className="text-zinc-400 text-xs">Position</span>
+                    <span className="text-white text-xs font-medium">{player.position || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5">
+                    <span className="text-zinc-400 text-xs">Age Group</span>
+                    <span className="text-white text-xs font-medium">{player.age ? `${player.age} years` : 'N/A'}</span>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+          </div>
 
           <button 
             onClick={onEditProfile}
