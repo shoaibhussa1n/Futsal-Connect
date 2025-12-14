@@ -177,91 +177,91 @@ export default function TournamentsScreen() {
             const isFilling = progressPercent >= 75;
 
             return (
-              <div
-                key={tournament.id}
-                className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden border border-zinc-800"
-              >
-                {/* Tournament Header */}
-                <div className="p-5 pb-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-lg mb-2">{tournament.name}</h3>
-                      <div className="flex items-center gap-2">
+          <div
+            key={tournament.id}
+            className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden border border-zinc-800"
+          >
+            {/* Tournament Header */}
+            <div className="p-5 pb-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg mb-2">{tournament.name}</h3>
+                  <div className="flex items-center gap-2">
                         {tournament.fee === 0 ? (
-                          <span className="bg-[#00FF57] text-black px-3 py-1 rounded-full text-xs">
-                            FREE
-                          </span>
-                        ) : (
-                          <span className="bg-[#FF6600] text-black px-3 py-1 rounded-full text-xs">
+                      <span className="bg-[#00FF57] text-black px-3 py-1 rounded-full text-xs">
+                        FREE
+                      </span>
+                    ) : (
+                      <span className="bg-[#FF6600] text-black px-3 py-1 rounded-full text-xs">
                             {tournament.fee} PKR
-                          </span>
-                        )}
-                        <span className={`px-3 py-1 rounded-full text-xs ${
-                          tournament.status === 'open'
-                            ? 'bg-green-500/20 text-green-500'
+                      </span>
+                    )}
+                    <span className={`px-3 py-1 rounded-full text-xs ${
+                      tournament.status === 'open'
+                        ? 'bg-green-500/20 text-green-500'
                             : isFilling
                             ? 'bg-yellow-500/20 text-yellow-500'
                             : 'bg-zinc-500/20 text-zinc-500'
-                        }`}>
+                    }`}>
                           {tournament.status === 'open' ? 'Open' : isFilling ? 'Filling Fast' : tournament.status}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#FF6600] to-[#cc5200] rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
+                    </span>
                   </div>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-[#FF6600] to-[#cc5200] rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Trophy className="w-6 h-6 text-white" />
+                </div>
+              </div>
 
-                  {/* Tournament Details */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-black/50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-                        <Calendar className="w-3 h-3" />
-                        Start Date
-                      </div>
+              {/* Tournament Details */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-black/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
+                    <Calendar className="w-3 h-3" />
+                    Start Date
+                  </div>
                       <div className="text-sm text-white">{formatDate(tournament.start_date)}</div>
-                    </div>
+                </div>
 
-                    <div className="bg-black/50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-                        <Users className="w-3 h-3" />
-                        Teams Joined
-                      </div>
+                <div className="bg-black/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
+                    <Users className="w-3 h-3" />
+                    Teams Joined
+                  </div>
                       <div className="text-sm text-white">{slotsFilled}/{slotsTotal}</div>
-                    </div>
+                </div>
 
-                    <div className="bg-black/50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-                        <Trophy className="w-3 h-3" />
-                        Prize
-                      </div>
-                      <div className="text-sm text-[#FF6600]">{tournament.prize}</div>
-                    </div>
+                <div className="bg-black/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
+                    <Trophy className="w-3 h-3" />
+                    Prize
+                  </div>
+                  <div className="text-sm text-[#FF6600]">{tournament.prize}</div>
+                </div>
 
-                    <div className="bg-black/50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-                        <Users className="w-3 h-3" />
-                        Format
-                      </div>
+                <div className="bg-black/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
+                    <Users className="w-3 h-3" />
+                    Format
+                  </div>
                       <div className="text-sm text-white">{tournament.format || '5v5'}</div>
-                    </div>
-                  </div>
+                </div>
+              </div>
 
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs text-zinc-500 mb-2">
-                      <span>Registration Progress</span>
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-xs text-zinc-500 mb-2">
+                  <span>Registration Progress</span>
                       <span>{slotsFilled}/{slotsTotal}</span>
-                    </div>
-                    <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-[#FF6600] to-[#cc5200] h-full rounded-full transition-all"
+                </div>
+                <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-[#FF6600] to-[#cc5200] h-full rounded-full transition-all"
                         style={{ width: `${progressPercent}%` }}
-                      ></div>
-                    </div>
-                  </div>
+                  ></div>
+                </div>
+              </div>
 
-                  {/* Action Button */}
+              {/* Action Button */}
                   <button
                     onClick={() => handleJoinTournament(tournament.id)}
                     disabled={registering === tournament.id || tournament.status !== 'open'}
@@ -275,16 +275,16 @@ export default function TournamentsScreen() {
                     ) : (
                       <span>Join Tournament</span>
                     )}
-                  </button>
-                </div>
+              </button>
+            </div>
 
-                {/* Additional Info Footer */}
-                <div className="bg-black/30 px-5 py-3 border-t border-zinc-800">
-                  <button className="text-sm text-[#FF6600] flex items-center gap-2">
-                    View Brackets & Details →
-                  </button>
-                </div>
-              </div>
+            {/* Additional Info Footer */}
+            <div className="bg-black/30 px-5 py-3 border-t border-zinc-800">
+              <button className="text-sm text-[#FF6600] flex items-center gap-2">
+                View Brackets & Details →
+              </button>
+            </div>
+          </div>
             );
           })
         )}
