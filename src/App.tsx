@@ -389,6 +389,10 @@ export default function App() {
           onPlayerRegister={() => setCurrentScreen('playerRegistration')}
           onPlayerMarketplace={() => setCurrentScreen('playerMarketplace')}
           onPlayerNotifications={() => setCurrentScreen('playerNotifications')}
+          onViewTeamProfile={(teamId) => {
+            sessionStorage.setItem('teamId', teamId);
+            setCurrentScreen('teamProfile');
+          }}
           onEditProfile={() => {
             // Navigate to player registration in edit mode if player exists, otherwise to profile completion
             if (hasPlayerProfile) {
