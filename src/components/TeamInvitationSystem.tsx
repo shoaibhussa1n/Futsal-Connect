@@ -147,40 +147,40 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
         <p className="text-zinc-500">Invite players to join your team</p>
       </div>
 
-      <div className="px-6 py-4 space-y-4">
+      <div className="px-6 py-5 space-y-5">
         {/* Tab Selector */}
         <div className="bg-zinc-900 rounded-xl p-1.5 grid grid-cols-2 gap-1">
           <button
             onClick={() => setSelectedTab('team')}
-            className={`py-3 rounded-lg transition-all ${
+            className={`py-2.5 rounded-lg transition-all ${
               selectedTab === 'team'
                 ? 'bg-[#00FF57] text-black'
                 : 'bg-transparent text-zinc-400'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-1.5">
               <Users className="w-4 h-4" />
-              <span>Lifetime Team</span>
+              <span className="text-sm">Lifetime Team</span>
             </div>
           </button>
           <button
             onClick={() => setSelectedTab('match')}
-            className={`py-3 rounded-lg transition-all ${
+            className={`py-2.5 rounded-lg transition-all ${
               selectedTab === 'match'
                 ? 'bg-[#00FF57] text-black'
                 : 'bg-transparent text-zinc-400'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-1.5">
               <Clock className="w-4 h-4" />
-              <span>Per Match</span>
+              <span className="text-sm">Per Match</span>
             </div>
           </button>
         </div>
 
         {/* Info Card */}
-        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-xl p-3">
-          <p className="text-xs text-blue-400">
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-xl p-3.5">
+          <p className="text-xs text-blue-400 leading-relaxed">
             {selectedTab === 'team' 
               ? '💡 Invite players to permanently join your team roster. They will be part of all future matches.'
               : '💡 Hire players for a single match. Perfect for filling in missing positions or trying out new players.'
@@ -190,23 +190,23 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
 
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search players by name or position..."
+            placeholder="Search by name or position..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-[#00FF57]/50 transition-colors"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#00FF57]/50 focus:ring-1 focus:ring-[#00FF57]/20 transition-all"
           />
         </div>
 
         {/* Available Players List */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base text-zinc-400">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-medium text-zinc-300">
               {selectedTab === 'team' ? 'Available for Teams' : 'Available for Hire'}
             </h2>
-            <span className="text-sm text-zinc-600">
+            <span className="text-xs text-zinc-500 bg-zinc-900 px-2.5 py-1 rounded-full">
               {availablePlayers.filter(p => {
                 const query = searchQuery.toLowerCase();
                 const name = p.profiles?.full_name?.toLowerCase() || '';
@@ -227,7 +227,7 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
               <p className="text-zinc-500">No available players found</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {availablePlayers.filter(p => {
                 const query = searchQuery.toLowerCase();
                 const name = p.profiles?.full_name?.toLowerCase() || '';
@@ -236,27 +236,27 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
               }).map((player) => (
                 <div
                   key={player.id}
-                  className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-4 border border-zinc-800"
+                  className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-4 border border-zinc-800 hover:border-zinc-700 transition-colors"
                 >
-                  <div className="flex gap-3 mb-3">
+                  <div className="flex gap-3.5 mb-3.5">
                     {/* Player Photo */}
                     {player.photo_url ? (
-                      <img src={player.photo_url} alt={player.profiles?.full_name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      <img src={player.photo_url} alt={player.profiles?.full_name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
                     ) : (
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
-                        <User className="w-6 h-6 text-black" />
+                      <div className="w-14 h-14 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
+                        <User className="w-7 h-7 text-black" />
                       </div>
                     )}
 
                     {/* Player Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-medium mb-0.5 truncate">{player.profiles?.full_name || 'Unknown Player'}</h3>
-                      <p className="text-xs text-zinc-500 mb-2">{player.position || 'Any Position'}</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        <span className="bg-[#00FF57]/20 text-[#00FF57] px-2 py-0.5 rounded text-xs">
+                      <h3 className="text-base font-semibold mb-1 truncate text-white">{player.profiles?.full_name || 'Unknown Player'}</h3>
+                      <p className="text-xs text-zinc-400 mb-2.5">{player.position || 'Any Position'}</p>
+                      <div className="flex gap-2 flex-wrap">
+                        <span className="bg-[#00FF57]/20 text-[#00FF57] px-2.5 py-1 rounded-md text-xs font-medium">
                           Skill: {player.skill_level || 5}/10
                         </span>
-                        <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-xs">
+                        <span className="bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-md text-xs">
                           {player.matches_played || 0} matches
                         </span>
                       </div>
@@ -265,25 +265,25 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
 
                   {/* Fee (for per-match) */}
                   {selectedTab === 'match' && (
-                    <div className="mb-3 p-2 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                    <div className="mb-3.5 p-2.5 bg-orange-500/10 border border-orange-500/30 rounded-lg">
                       <p className="text-xs text-orange-400">
-                        Match Fee: <span className="text-orange-300 font-medium">Rs. 500</span>
+                        Match Fee: <span className="text-orange-300 font-semibold">Rs. 500</span>
                       </p>
                     </div>
                   )}
 
                   {/* Stats Bar */}
-                  <div className="flex gap-3 mb-3 p-2.5 bg-black/50 rounded-lg">
+                  <div className="flex gap-3 mb-3.5 p-3 bg-black/50 rounded-lg border border-zinc-800/50">
                     <div className="flex-1 text-center">
-                      <div className="text-lg text-white mb-0.5">{player.matches_played || 0}</div>
+                      <div className="text-lg font-semibold text-white mb-0.5">{player.matches_played || 0}</div>
                       <div className="text-xs text-zinc-500">Matches</div>
                     </div>
                     <div className="flex-1 text-center">
-                      <div className="text-lg text-[#00FF57] mb-0.5">{player.rating?.toFixed(1) || '5.0'}</div>
+                      <div className="text-lg font-semibold text-[#00FF57] mb-0.5">{player.rating?.toFixed(1) || '5.0'}</div>
                       <div className="text-xs text-zinc-500">Rating</div>
                     </div>
                     <div className="flex-1 text-center">
-                      <div className="text-lg text-[#00A3FF] mb-0.5">
+                      <div className="text-lg font-semibold text-[#00A3FF] mb-0.5">
                         {selectedTab === 'team' ? '✓' : '500'}
                       </div>
                       <div className="text-xs text-zinc-500">
@@ -293,14 +293,14 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <button className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg py-2 text-white text-xs active:scale-95 transition-transform">
+                  <div className="flex gap-2.5">
+                    <button className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg py-2.5 text-white text-xs font-medium active:scale-95 transition-transform hover:bg-zinc-750">
                       View Profile
                     </button>
                     <button
                       onClick={() => handleInvite(player.id, selectedTab)}
                       disabled={inviting === player.id}
-                      className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2 text-black text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2.5 text-black text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed hover:from-[#00cc44] hover:to-[#00aa33]"
                     >
                       {inviting === player.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -320,15 +320,15 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
 
         {/* Team Info Section (only for lifetime team) */}
         {selectedTab === 'team' && userTeam && (
-          <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-6 border border-[#00FF57]/20">
-            <h3 className="text-lg mb-4">Your Team: <span className="text-[#00FF57]">{userTeam.name}</span></h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-black/50 rounded-lg">
-                <div className="text-2xl text-white mb-1">-</div>
+          <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-5 border border-[#00FF57]/20">
+            <h3 className="text-base font-semibold mb-4 text-white">Your Team: <span className="text-[#00FF57]">{userTeam.name}</span></h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center p-3 bg-black/50 rounded-lg border border-zinc-800/50">
+                <div className="text-xl font-semibold text-white mb-1">-</div>
                 <div className="text-xs text-zinc-500">Players</div>
               </div>
-              <div className="text-center p-3 bg-black/50 rounded-lg">
-                <div className="text-2xl text-[#00FF57] mb-1">-</div>
+              <div className="text-center p-3 bg-black/50 rounded-lg border border-zinc-800/50">
+                <div className="text-xl font-semibold text-[#00FF57] mb-1">-</div>
                 <div className="text-xs text-zinc-500">Slots Left</div>
               </div>
             </div>
