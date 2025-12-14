@@ -117,21 +117,21 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black pb-20">
       {/* Header with Cover */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black h-40 relative">
-        <div className="absolute -bottom-16 left-6 flex items-end gap-4">
-          <div className="w-32 h-32 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)]">
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black h-36 relative">
+        <div className="absolute -bottom-14 left-6">
+          <div className="w-28 h-28 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)]">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full rounded-2xl object-cover" />
             ) : (
-              <User className="w-16 h-16 text-black" />
+              <User className="w-14 h-14 text-black" />
             )}
           </div>
         </div>
       </div>
 
-      <div className="px-6 pt-24 pb-6">
+      <div className="px-6 pt-20 pb-6">
         {/* User Info */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
@@ -320,16 +320,6 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
             className="w-full bg-zinc-900 border border-zinc-800 text-white py-3.5 rounded-xl flex items-center justify-between px-5 active:scale-95 transition-transform hover:bg-zinc-800"
           >
             <span className="font-medium">Edit Profile</span>
-            <ChevronRight className="w-4 h-4 text-zinc-500" />
-          </button>
-
-          <button className="w-full bg-zinc-900 border border-zinc-800 text-white py-3.5 rounded-xl flex items-center justify-between px-5 active:scale-95 transition-transform hover:bg-zinc-800">
-            <span className="font-medium">Settings</span>
-            <ChevronRight className="w-4 h-4 text-zinc-500" />
-          </button>
-
-          <button className="w-full bg-zinc-900 border border-zinc-800 text-white py-3.5 rounded-xl flex items-center justify-between px-5 active:scale-95 transition-transform hover:bg-zinc-800">
-            <span className="font-medium">Help & Support</span>
             <ChevronRight className="w-4 h-4 text-zinc-500" />
           </button>
 
