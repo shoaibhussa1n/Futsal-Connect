@@ -143,7 +143,7 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
             alt="Futsal Connect" 
             className="w-20 h-20 object-contain"
           />
-          <h1 className="text-2xl font-bold text-[#00FF57]">Futsal Connect</h1>
+          <h1 className="text-3xl font-bold text-[#00FF57]">Futsal Connect</h1>
         </div>
       </div>
 
