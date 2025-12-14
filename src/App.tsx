@@ -263,15 +263,22 @@ export default function App() {
         />;
       case 'leaderboard':
         return <LeaderboardScreen onBack={() => setCurrentScreen('main')} />;
-      case 'teamProfile':
+      case 'teamProfile': {
+        const storedTeamId = sessionStorage.getItem('teamId');
         return <TeamProfile 
-          onBack={() => setCurrentScreen('main')} 
+          onBack={() => {
+            sessionStorage.removeItem('teamId');
+            setCurrentScreen('main');
+          }} 
           onEditTeam={() => {
             sessionStorage.setItem('editTeam', 'true');
             setCurrentScreen('teamRegistration');
           }}
           onInvitePlayers={() => setCurrentScreen('teamInvitations')}
+          teamId={storedTeamId || undefined}
+          key={storedTeamId || 'no-id'} // Force re-render when teamId changes
         />;
+      }
       case 'playerProfile': {
         const storedPlayerId = sessionStorage.getItem('playerId');
         return <PlayerProfile 
