@@ -16,6 +16,7 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
   const [profile, setProfile] = useState<any>(null);
   const [player, setPlayer] = useState<any>(null);
   const [team, setTeam] = useState<any>(null);
+  const [playerTeam, setPlayerTeam] = useState<any>(null); // Team the player is a member of (not captain)
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
 
   useEffect(() => {
@@ -50,6 +51,21 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
 
         if (playerData) {
           setPlayer(playerData);
+
+          // Get team membership (if player is a member but not captain)
+          const { data: teamMemberData } = await supabase
+            .from('team_members')
+            .select(`
+              *,
+              teams (*)
+            `)
+            .eq('player_id', playerData.id)
+            .eq('role', 'member')
+            .single();
+
+          if (teamMemberData && teamMemberData.teams) {
+            setPlayerTeam(teamMemberData.teams);
+          }
         }
 
         // Get team (if captain)
@@ -137,7 +153,10 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
                 <h1 className="text-2xl font-semibold mb-1 text-white truncate">{profile?.full_name || 'User'}</h1>
                 <p className="text-sm text-zinc-500 mb-1">{team ? 'Team Captain' : player ? 'Player' : 'Member'}</p>
                 {team && (
-                  <p className="text-sm text-zinc-600 truncate">{team.name}</p>
+                  <p className="text-sm text-zinc-600 truncate">{team.name} (C)</p>
+                )}
+                {!team && playerTeam && player && (
+                  <p className="text-sm text-zinc-600 truncate">{playerTeam.name} - {player.position || 'N/A'}</p>
                 )}
               </div>
               <button 
