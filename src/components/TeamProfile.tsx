@@ -20,6 +20,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
   const [isEditing, setIsEditing] = useState(false);
   const [removingMember, setRemovingMember] = useState<string | null>(null);
   const [isCaptain, setIsCaptain] = useState(false);
+  const [captainName, setCaptainName] = useState<string>('');
 
   // Get teamId from prop or sessionStorage
   const currentTeamId = propTeamId || sessionStorage.getItem('teamId');
@@ -82,6 +83,19 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
       if (fetchedTeam) {
         setTeam(fetchedTeam);
 
+        // Get captain's name
+        if (fetchedTeam.captain_id) {
+          const { data: captainProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', fetchedTeam.captain_id)
+            .single();
+          
+          if (captainProfile) {
+            setCaptainName(captainProfile.full_name || 'Unknown');
+          }
+        }
+
         // Get team members
         const { data: membersData, error: membersError } = await getTeamMembers(fetchedTeam.id);
         if (!membersError && membersData) {
@@ -104,6 +118,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
         setMembers([]);
         setRank(null);
         setIsCaptain(false);
+        setCaptainName('');
       }
     } catch (error) {
       console.error('Error loading team data:', error);
@@ -186,7 +201,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
       <div className="px-6 -mt-2">
         {/* Team Logo, Name & Rating */}
         <div className="bg-gradient-to-br from-zinc-900 to-black rounded-2xl p-6 mb-4 border border-[#00FF57]/20">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4">
             {team.logo_url ? (
               <img src={team.logo_url} alt={team.name} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
             ) : (
@@ -195,11 +210,13 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-semibold text-white mb-1 truncate">{team.name}</h1>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-[#00FF57]">{team.rating?.toFixed(1) || '5.0'}</span>
-                <span className="text-sm text-zinc-500">Rating</span>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <h1 className="text-2xl font-semibold text-white truncate">{team.name}</h1>
+                <span className="text-3xl font-bold text-[#00FF57] flex-shrink-0">{team.rating?.toFixed(1) || '5.0'}</span>
               </div>
+              {captainName && (
+                <p className="text-sm text-zinc-400">Captain: {captainName}</p>
+              )}
             </div>
           </div>
         </div>
