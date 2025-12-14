@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, UserPlus, Clock, Users, Loader2, Search } from 'lucide-react';
+import { User, UserPlus, Clock, Users, Loader2, Search, X, Calendar, MapPin, DollarSign } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlayers, createPlayerInvitation } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -17,6 +17,12 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
   const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
   const [userTeam, setUserTeam] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMatchDetailsModal, setShowMatchDetailsModal] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [matchDate, setMatchDate] = useState('');
+  const [matchTime, setMatchTime] = useState('');
+  const [matchLocation, setMatchLocation] = useState('');
+  const [perHeadContribution, setPerHeadContribution] = useState('');
 
   useEffect(() => {
     loadData();
@@ -71,7 +77,21 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
     }
   };
 
-  const handleInvite = async (playerId: string, type: 'team' | 'match') => {
+  const handleInviteClick = (playerId: string, type: 'team' | 'match') => {
+    if (type === 'match') {
+      setSelectedPlayerId(playerId);
+      setShowMatchDetailsModal(true);
+    } else {
+      handleInvite(playerId, type);
+    }
+  };
+
+  const handleInvite = async (playerId: string, type: 'team' | 'match', matchDetails?: {
+    date: string;
+    time: string;
+    location: string;
+    perHeadContribution: string;
+  }) => {
     if (!userTeam) {
       alert('You need to create a team first');
       return;
@@ -80,16 +100,32 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
     setInviting(playerId);
 
     try {
+      let message = '';
+      let matchFee = null;
+
+      if (type === 'team') {
+        message = `Join ${userTeam.name} as a permanent team member!`;
+      } else {
+        if (matchDetails) {
+          matchFee = parseFloat(matchDetails.perHeadContribution) || 0;
+          message = `We need you for an upcoming match!\n\n` +
+            `📅 Date: ${matchDetails.date}\n` +
+            `⏰ Time: ${matchDetails.time}\n` +
+            `📍 Location: ${matchDetails.location}\n` +
+            `💰 Per Head Contribution: Rs. ${matchDetails.perHeadContribution}`;
+        } else {
+          message = `We need you for an upcoming match!`;
+        }
+      }
+
       const { data, error } = await createPlayerInvitation({
         team_id: userTeam.id,
         player_id: playerId,
         invitation_type: type,
         match_id: null,
-        match_fee: type === 'match' ? 500 : null,
+        match_fee: matchFee,
         status: 'pending',
-        message: type === 'team' 
-          ? `Join ${userTeam.name} as a permanent team member!`
-          : `We need you for an upcoming match. Match fee: Rs. 500`,
+        message: message,
       });
 
       if (error) {
@@ -99,11 +135,35 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
         if (onInvitePlayer) {
           onInvitePlayer(playerId, type);
         }
+        // Reset form
+        if (type === 'match') {
+          setShowMatchDetailsModal(false);
+          setMatchDate('');
+          setMatchTime('');
+          setMatchLocation('');
+          setPerHeadContribution('');
+          setSelectedPlayerId(null);
+        }
       }
     } catch (err: any) {
       alert(err.message || 'An error occurred');
     } finally {
       setInviting(null);
+    }
+  };
+
+  const handleSubmitMatchDetails = () => {
+    if (!matchDate || !matchTime || !matchLocation || !perHeadContribution) {
+      alert('Please fill in all match details');
+      return;
+    }
+    if (selectedPlayerId) {
+      handleInvite(selectedPlayerId, 'match', {
+        date: matchDate,
+        time: matchTime,
+        location: matchLocation,
+        perHeadContribution: perHeadContribution,
+      });
     }
   };
 
@@ -263,15 +323,6 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
                     </div>
                   </div>
 
-                  {/* Fee (for per-match) */}
-                  {selectedTab === 'match' && (
-                    <div className="mb-3 p-2 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-                      <p className="text-xs text-orange-400">
-                        Match Fee: <span className="text-orange-300 font-semibold">Rs. 500</span>
-                      </p>
-                    </div>
-                  )}
-
                   {/* Stats Bar */}
                   <div className="flex gap-2.5 mb-3 p-2.5 bg-black/50 rounded-lg border border-zinc-800/50">
                     <div className="flex-1 text-center">
@@ -298,7 +349,7 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
                       View Profile
                     </button>
                     <button
-                      onClick={() => handleInvite(player.id, selectedTab)}
+                      onClick={() => handleInviteClick(player.id, selectedTab)}
                       disabled={inviting === player.id}
                       className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2 text-black text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed hover:from-[#00cc44] hover:to-[#00aa33]"
                     >
@@ -335,6 +386,115 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
           </div>
         )}
       </div>
+
+      {/* Match Details Modal */}
+      {showMatchDetailsModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-6 border border-zinc-800 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-white">Match Details</h2>
+              <button
+                onClick={() => {
+                  setShowMatchDetailsModal(false);
+                  setMatchDate('');
+                  setMatchTime('');
+                  setMatchLocation('');
+                  setPerHeadContribution('');
+                  setSelectedPlayerId(null);
+                }}
+                className="text-zinc-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Date */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
+                  <Calendar className="w-4 h-4" />
+                  Match Date
+                </label>
+                <input
+                  type="date"
+                  value={matchDate}
+                  onChange={(e) => setMatchDate(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#00FF57]/50 transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Time */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
+                  <Clock className="w-4 h-4" />
+                  Match Time
+                </label>
+                <input
+                  type="time"
+                  value={matchTime}
+                  onChange={(e) => setMatchTime(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#00FF57]/50 transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
+                  <MapPin className="w-4 h-4" />
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={matchLocation}
+                  onChange={(e) => setMatchLocation(e.target.value)}
+                  placeholder="Enter match location..."
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#00FF57]/50 transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Per Head Contribution */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
+                  <DollarSign className="w-4 h-4" />
+                  Per Head Contribution (Rs.)
+                </label>
+                <input
+                  type="number"
+                  value={perHeadContribution}
+                  onChange={(e) => setPerHeadContribution(e.target.value)}
+                  placeholder="500"
+                  min="0"
+                  step="50"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#00FF57]/50 transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                onClick={handleSubmitMatchDetails}
+                disabled={inviting === selectedPlayerId}
+                className="w-full bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-3 text-black font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed hover:from-[#00cc44] hover:to-[#00aa33]"
+              >
+                {inviting === selectedPlayerId ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    Send Hire Request
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
