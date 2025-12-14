@@ -167,16 +167,16 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
     <div className="min-h-screen bg-black pb-20">
       {/* Header */}
       <div className="bg-gradient-to-b from-zinc-900 to-black px-6 pt-12 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={onBack} className="text-[#00FF57]">
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={onBack} className="text-[#00FF57] p-1 -ml-1">
             <ChevronLeft className="w-6 h-6" />
           </button>
           {isCaptain && onEditTeam && (
             <button 
               onClick={onEditTeam}
-              className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-2.5 rounded-xl active:scale-95 transition-transform"
+              className="bg-zinc-900/80 border border-[#00FF57]/50 text-[#00FF57] p-2 rounded-lg active:scale-95 transition-transform hover:bg-zinc-900 hover:border-[#00FF57]"
             >
-              <Edit className="w-5 h-5" />
+              <Edit className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -282,12 +282,12 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
 
         {/* Players List */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Team Players</h2>
             {isCaptain && onInvitePlayers && (
               <button 
                 onClick={onInvitePlayers}
-                className="text-[#00FF57] text-sm flex items-center gap-1.5 active:scale-95 transition-transform font-medium"
+                className="text-[#00FF57] text-sm flex items-center gap-1.5 active:scale-95 transition-transform font-medium hover:text-[#00cc44]"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Invite</span>
@@ -296,64 +296,65 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
           </div>
 
           {members.length > 0 ? (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {members.map((member) => {
                 const player = member.players;
                 const profile = player?.profiles;
                 const isMemberCaptain = member.role === 'captain';
                 
                 return (
-                  <div key={member.id} className="bg-zinc-900 rounded-xl p-3.5 border border-zinc-800">
-                    <div className="flex items-center justify-between">
+                  <div key={member.id} className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+                    <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt={profile.full_name} className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
+                          <img src={profile.avatar_url} alt={profile.full_name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
                         ) : (
-                          <div className="w-11 h-11 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span className="text-black font-bold text-sm">{profile?.full_name?.charAt(0) || 'P'}</span>
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span className="text-black font-bold">{profile?.full_name?.charAt(0) || 'P'}</span>
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-medium text-white truncate">{profile?.full_name || 'Unknown Player'}</p>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <p className="text-sm font-semibold text-white truncate">{profile?.full_name || 'Unknown Player'}</p>
                             {isMemberCaptain && (
                               <span className="bg-[#00FF57] text-black px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0">
                                 Captain
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-zinc-500">
+                          <div className="flex items-center gap-2 text-xs text-zinc-400">
                             <span>{player?.position || 'N/A'}</span>
                             {player?.rating && (
                               <>
-                                <span>•</span>
-                                <span className="text-[#00FF57]">Rating: {player.rating.toFixed(1)}</span>
+                                <span className="text-zinc-600">•</span>
+                                <span className="text-[#00FF57] font-medium">Rating: {player.rating.toFixed(1)}</span>
                               </>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
+                      <div className="flex items-center gap-4 flex-shrink-0">
                         {player?.goals !== undefined && (
-                          <div className="text-center">
-                            <p className="text-sm text-white font-semibold">{player.goals || 0}</p>
-                            <p className="text-xs text-zinc-500">Goals</p>
+                          <div className="text-center min-w-[45px]">
+                            <p className="text-base text-white font-bold">{player.goals || 0}</p>
+                            <p className="text-xs text-zinc-500 mt-0.5">Goals</p>
                           </div>
                         )}
                         {player?.mvps > 0 && (
-                          <div className="text-center">
+                          <div className="text-center min-w-[45px]">
                             <div className="flex items-center gap-1 justify-center">
-                              <Award className="w-3.5 h-3.5 text-[#FF6600]" />
-                              <span className="text-sm text-[#FF6600] font-semibold">{player.mvps}</span>
+                              <Award className="w-4 h-4 text-[#FF6600]" />
+                              <span className="text-base text-[#FF6600] font-bold">{player.mvps}</span>
                             </div>
-                            <p className="text-xs text-zinc-500">MVP</p>
+                            <p className="text-xs text-zinc-500 mt-0.5">MVP</p>
                           </div>
                         )}
                         {isCaptain && !isMemberCaptain && (
                           <button
                             onClick={() => handleRemoveMember(member.id, profile?.full_name || 'Player')}
                             disabled={removingMember === member.id}
-                            className="p-1.5 text-red-400 hover:text-red-300 active:scale-95 transition-transform disabled:opacity-50 ml-1"
+                            className="p-2 text-red-400 hover:text-red-300 active:scale-95 transition-transform disabled:opacity-50"
+                            title="Remove player"
                           >
                             {removingMember === member.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
