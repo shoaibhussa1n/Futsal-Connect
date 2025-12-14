@@ -175,7 +175,7 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
       {/* Search Bar */}
       <div className="px-6 pb-4">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none z-10" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search teams..."
