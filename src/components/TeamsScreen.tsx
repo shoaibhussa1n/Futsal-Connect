@@ -161,7 +161,7 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
 
       {/* Action Buttons */}
       {userTeamId && (
-        <div className="px-6 pb-3">
+        <div className="px-6 pb-4">
           <button
             onClick={onInvitePlayers}
             className="w-full bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-xl py-2 text-black text-sm font-medium flex items-center justify-center gap-1.5 active:scale-98 transition-transform shadow-[0_0_15px_rgba(0,255,87,0.15)]"
