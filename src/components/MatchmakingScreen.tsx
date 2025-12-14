@@ -123,14 +123,14 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
       </div>
 
       {/* Filters */}
-      <div className="px-6 py-4 space-y-4">
+      <div className="px-6 py-4 space-y-3">
         {/* Area Selector */}
         <div>
-          <label className="text-sm text-zinc-400 mb-2 block">Location</label>
+          <label className="text-xs text-zinc-400 mb-1.5 block">Location</label>
           <select
             value={selectedArea}
             onChange={(e) => setSelectedArea(e.target.value)}
-            className="w-full bg-zinc-900 border-2 border-[#00FF57]/30 rounded-xl px-4 py-3 text-white focus:border-[#00FF57] focus:outline-none"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#00FF57]/50 focus:outline-none transition-colors"
           >
             <option>All Areas</option>
             <option>DHA</option>
@@ -158,15 +158,15 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
 
         {/* Age Group */}
         <div>
-          <label className="text-sm text-zinc-400 mb-2 block">Age Group</label>
-          <div className="flex gap-2">
+          <label className="text-xs text-zinc-400 mb-1.5 block">Age Group</label>
+          <div className="flex gap-1.5">
             {['All', 'U16', 'U18', 'U21', 'Open'].map((age) => (
               <button
                 key={age}
                 onClick={() => setAgeGroup(age)}
-                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
                   age === ageGroup
-                    ? 'bg-[#00FF57] text-black'
+                    ? 'bg-[#00FF57] text-black font-medium'
                     : 'bg-zinc-900 text-zinc-400 border border-zinc-800'
                 }`}
               >
@@ -178,17 +178,17 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
 
         {/* Rating Range */}
         <div>
-          <label className="text-sm text-zinc-400 mb-3 block">
+          <label className="text-xs text-zinc-400 mb-2 block">
             Team Rating: <span className="text-[#00FF57]">{ratingRange[0]} - {ratingRange[1]}</span>
           </label>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <input
               type="range"
               min="1"
               max="10"
               value={ratingRange[0]}
               onChange={(e) => setRatingRange([Number(e.target.value), ratingRange[1]])}
-              className="flex-1 h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+              className="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
             />
             <input
               type="range"
@@ -196,7 +196,7 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
               max="10"
               value={ratingRange[1]}
               onChange={(e) => setRatingRange([ratingRange[0], Number(e.target.value)])}
-              className="flex-1 h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+              className="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
             />
           </div>
         </div>
@@ -204,8 +204,8 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
 
       {/* Teams List */}
       <div className="px-6 pb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg text-zinc-400">{filteredTeams.length} Teams Available</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-medium text-zinc-300">{filteredTeams.length} Teams Available</h2>
         </div>
 
         {filteredTeams.length === 0 ? (
@@ -233,51 +233,51 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
               return (
                 <div
                   key={team.id}
-                  className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl p-5 border border-zinc-800"
+                  className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-xl p-3 border border-zinc-800 hover:border-zinc-700 transition-colors"
                 >
                   {/* Team Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
                       {team.logo_url ? (
-                        <img src={team.logo_url} alt={team.name} className="w-12 h-12 rounded-xl object-cover" />
+                        <img src={team.logo_url} alt={team.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                       ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#007BFF] to-[#0056b3] rounded-xl flex items-center justify-center">
-                          <Users className="w-6 h-6 text-white" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#007BFF] to-[#0056b3] rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users className="w-5 h-5 text-white" />
                         </div>
                       )}
-                      <div>
-                        <h3 className="mb-1">{team.name}</h3>
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
-                          <MapPin className="w-3 h-3" />
-                          {team.area || 'Karachi'} • {team.age_group}
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold mb-0.5 truncate text-white">{team.name}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{team.area || 'Karachi'} • {team.age_group}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl text-[#00FF57] mb-1">{team.rating?.toFixed(1) || '5.0'}</div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-lg font-semibold text-[#00FF57] mb-0.5">{team.rating?.toFixed(1) || '5.0'}</div>
                       <div className="text-xs text-zinc-500">Rating</div>
                     </div>
                   </div>
 
                   {/* Team Stats */}
-                  <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-zinc-800">
+                  <div className="grid grid-cols-3 gap-2.5 mb-3 pb-3 border-b border-zinc-800">
                     <div>
-                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-1">
+                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-0.5">
                         <TrendingUp className="w-3 h-3" />
                         Win Rate
                       </div>
-                      <div className="text-white">{winRate}%</div>
+                      <div className="text-sm font-medium text-white">{winRate}%</div>
                     </div>
                     <div>
-                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-1">
+                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-0.5">
                         <Target className="w-3 h-3" />
                         Wins
                       </div>
-                      <div className="text-white">{team.wins || 0}</div>
+                      <div className="text-sm font-medium text-white">{team.wins || 0}</div>
                     </div>
                     <div>
-                      <div className="text-zinc-400 text-xs mb-1">Level</div>
-                      <div className="text-white">{team.team_level || 5}/10</div>
+                      <div className="text-zinc-400 text-xs mb-0.5">Level</div>
+                      <div className="text-sm font-medium text-white">{team.team_level || 5}/10</div>
                     </div>
                   </div>
 
@@ -288,7 +288,7 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
                       sessionStorage.setItem('opponentTeamId', team.id);
                       onRequestMatch(team.id);
                     }}
-                    className="w-full bg-gradient-to-r from-[#00FF57] to-[#00cc44] text-black py-3 rounded-xl active:scale-95 transition-transform shadow-[0_0_20px_rgba(0,255,87,0.2)]"
+                    className="w-full bg-gradient-to-r from-[#00FF57] to-[#00cc44] text-black py-2.5 rounded-lg text-sm font-semibold active:scale-95 transition-transform hover:from-[#00cc44] hover:to-[#00aa33] shadow-[0_0_15px_rgba(0,255,87,0.15)]"
                   >
                     Request Match
                   </button>
