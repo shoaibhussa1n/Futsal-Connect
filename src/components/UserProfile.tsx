@@ -322,9 +322,11 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
                 onClick={onPlayerNotifications}
                 className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-zinc-800 relative"
               >
-                <Bell className="w-6 h-6 text-[#FF6600]" />
+                <div className="relative">
+                  <Bell className="w-6 h-6 text-[#FF6600]" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+                </div>
                 <span className="text-xs font-medium text-white text-center">Notifications</span>
-                <span className="absolute top-2 right-2 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-medium">0</span>
               </button>
             </div>
           )}
