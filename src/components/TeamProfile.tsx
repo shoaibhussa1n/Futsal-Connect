@@ -8,9 +8,10 @@ interface TeamProfileProps {
   onBack: () => void;
   onEditTeam?: () => void;
   onInvitePlayers?: () => void;
+  teamId?: string; // Optional prop to view a specific team
 }
 
-export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: TeamProfileProps) {
+export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamId: propTeamId }: TeamProfileProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState<any>(null);
@@ -18,6 +19,10 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
   const [rank, setRank] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [removingMember, setRemovingMember] = useState<string | null>(null);
+  const [isCaptain, setIsCaptain] = useState(false);
+
+  // Get teamId from prop or sessionStorage
+  const currentTeamId = propTeamId || sessionStorage.getItem('teamId');
 
   useEffect(() => {
     loadTeamData();
@@ -30,7 +35,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [user]);
+  }, [user, currentTeamId]);
 
   const loadTeamData = async () => {
     if (!user) {
@@ -40,6 +45,8 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
 
     try {
       setLoading(true);
+      let fetchedTeam: any = null;
+      let userProfileId: string | null = null;
 
       // Get user's profile
       const { data: profile } = await supabase
@@ -49,34 +56,54 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
         .single();
 
       if (profile) {
-        // Get user's team
-        const { data: teamData, error: teamError } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('captain_id', profile.id)
-          .single();
-
-        if (teamData && !teamError) {
-          setTeam(teamData);
-
-          // Get team members
-          const { data: membersData, error: membersError } = await getTeamMembers(teamData.id);
-          if (!membersError && membersData) {
-            setMembers(membersData);
+        userProfileId = profile.id;
+        
+        // If a specific teamId is provided, fetch that team
+        if (currentTeamId) {
+          const { data: teamData, error: teamError } = await getTeamById(currentTeamId);
+          if (teamData && !teamError) {
+            fetchedTeam = teamData;
+            setIsCaptain(teamData.captain_id === userProfileId);
           }
-
-          // Get team rank
-          const { data: leaderboard } = await supabase
+        } else {
+          // Otherwise, fetch the user's own team (if they are captain)
+          const { data: teamData, error: teamError } = await supabase
             .from('teams')
-            .select('id')
-            .order('rating', { ascending: false })
-            .order('wins', { ascending: false });
-
-          if (leaderboard) {
-            const teamIndex = leaderboard.findIndex(t => t.id === teamData.id);
-            setRank(teamIndex >= 0 ? teamIndex + 1 : null);
+            .select('*')
+            .eq('captain_id', userProfileId)
+            .single();
+          if (teamData && !teamError) {
+            fetchedTeam = teamData;
+            setIsCaptain(true);
           }
         }
+      }
+
+      if (fetchedTeam) {
+        setTeam(fetchedTeam);
+
+        // Get team members
+        const { data: membersData, error: membersError } = await getTeamMembers(fetchedTeam.id);
+        if (!membersError && membersData) {
+          setMembers(membersData);
+        }
+
+        // Get team rank
+        const { data: leaderboard } = await supabase
+          .from('teams')
+          .select('id')
+          .order('rating', { ascending: false })
+          .order('wins', { ascending: false });
+
+        if (leaderboard) {
+          const teamIndex = leaderboard.findIndex(t => t.id === fetchedTeam.id);
+          setRank(teamIndex >= 0 ? teamIndex + 1 : null);
+        }
+      } else {
+        setTeam(null);
+        setMembers([]);
+        setRank(null);
+        setIsCaptain(false);
       }
     } catch (error) {
       console.error('Error loading team data:', error);
@@ -125,7 +152,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
         </div>
         <div className="px-6 py-12 text-center">
           <Users className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-          <p className="text-zinc-500 mb-4">You don't have a team yet</p>
+          <p className="text-zinc-500 mb-4">You don't have a team yet or the team does not exist.</p>
           <button onClick={onBack} className="text-[#00FF57]">Go Back</button>
         </div>
       </div>
@@ -146,9 +173,9 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl mb-2 text-white">{team.name}</h1>
-            <p className="text-zinc-500">Your Team Profile</p>
+            <p className="text-zinc-500">{isCaptain ? 'Your Team Profile' : 'Team Profile'}</p>
           </div>
-          {onEditTeam && (
+          {isCaptain && onEditTeam && (
             <button 
               onClick={onEditTeam}
               className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-3 rounded-xl active:scale-95 transition-transform"
@@ -252,7 +279,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl">Team Players</h2>
-            {onInvitePlayers && (
+            {isCaptain && onInvitePlayers && (
               <button 
                 onClick={onInvitePlayers}
                 className="text-[#00FF57] text-sm flex items-center gap-1 active:scale-95 transition-transform"
@@ -268,7 +295,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
               {members.map((member) => {
                 const player = member.players;
                 const profile = player?.profiles;
-                const isCaptain = member.role === 'captain';
+                const isMemberCaptain = member.role === 'captain';
                 
                 return (
                   <div key={member.id} className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
@@ -284,7 +311,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-medium">{profile?.full_name || 'Unknown Player'}</p>
-                            {isCaptain && (
+                            {isMemberCaptain && (
                               <span className="bg-[#00FF57] text-black px-2 py-0.5 rounded-full text-xs font-medium">
                                 Captain
                               </span>
@@ -321,7 +348,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
                             )}
                           </div>
                         </div>
-                        {!isCaptain && (
+                        {isCaptain && !isMemberCaptain && (
                           <button
                             onClick={() => handleRemoveMember(member.id, profile?.full_name || 'Player')}
                             disabled={removingMember === member.id}
@@ -344,7 +371,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
             <div className="text-center py-8 text-zinc-500 bg-zinc-900/50 rounded-xl border border-zinc-800">
               <Users className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
               <p className="mb-2">No players added yet.</p>
-              {onInvitePlayers && (
+              {isCaptain && onInvitePlayers && (
                 <button 
                   onClick={onInvitePlayers}
                   className="text-[#00FF57] text-sm flex items-center gap-1 mx-auto"
@@ -358,7 +385,7 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers }: Tea
         </div>
 
         {/* Edit Team Button */}
-        {onEditTeam && (
+        {isCaptain && onEditTeam && (
           <button 
             onClick={onEditTeam}
             className="w-full bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] py-4 rounded-xl active:scale-95 transition-transform mb-6 flex items-center justify-center gap-2"

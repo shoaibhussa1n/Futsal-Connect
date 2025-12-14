@@ -200,11 +200,11 @@ export default function TeamsScreen({ onViewTeam, onInvitePlayers, onTeamNotific
               return (
                 <div
                   key={team.id}
-                  onClick={isMyTeam ? () => onViewTeam(team.id) : undefined}
-                  className={`rounded-2xl p-5 border transition-all ${
+                  onClick={() => onViewTeam(team.id)}
+                  className={`rounded-2xl p-5 border transition-all cursor-pointer active:scale-98 ${
                     isMyTeam
-                      ? 'bg-gradient-to-r from-[#00FF57]/20 to-transparent border-[#00FF57] cursor-pointer active:scale-98'
-                      : 'bg-zinc-900 border-zinc-800'
+                      ? 'bg-gradient-to-r from-[#00FF57]/20 to-transparent border-[#00FF57]'
+                      : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
                   }`}
                 >
                   <div className="flex items-center gap-4">
