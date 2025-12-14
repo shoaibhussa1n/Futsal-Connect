@@ -123,10 +123,10 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
       </div>
 
       {/* Filters */}
-      <div className="px-6 py-4 space-y-3">
+      <div className="px-6 py-4 space-y-4">
         {/* Area Selector */}
         <div>
-          <label className="text-xs text-zinc-400 mb-1.5 block">Location</label>
+          <label className="text-xs text-zinc-400 mb-2 block">Location</label>
           <select
             value={selectedArea}
             onChange={(e) => setSelectedArea(e.target.value)}
@@ -158,8 +158,8 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
 
         {/* Age Group */}
         <div>
-          <label className="text-xs text-zinc-400 mb-1.5 block">Age Group</label>
-          <div className="flex gap-1.5">
+          <label className="text-xs text-zinc-400 mb-2 block">Age Group</label>
+          <div className="flex gap-2">
             {['All', 'U16', 'U18', 'U21', 'Open'].map((age) => (
               <button
                 key={age}
@@ -178,7 +178,7 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
 
         {/* Rating Range */}
         <div>
-          <label className="text-xs text-zinc-400 mb-2 block">
+          <label className="text-xs text-zinc-400 mb-2.5 block">
             Team Rating: <span className="text-[#00FF57]">{ratingRange[0]} - {ratingRange[1]}</span>
           </label>
           <div className="flex gap-3">
@@ -203,8 +203,8 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
       </div>
 
       {/* Teams List */}
-      <div className="px-6 pb-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-6 pb-6 pt-2">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-medium text-zinc-300">{filteredTeams.length} Teams Available</h2>
         </div>
 
@@ -233,11 +233,11 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
               return (
                 <div
                   key={team.id}
-                  className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-xl p-3 border border-zinc-800 hover:border-zinc-700 transition-colors"
+                  className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-xl p-4 border border-zinc-800 hover:border-zinc-700 transition-colors"
                 >
                   {/* Team Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2.5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
                       {team.logo_url ? (
                         <img src={team.logo_url} alt={team.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                       ) : (
@@ -246,7 +246,7 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
                         </div>
                       )}
                       <div className="min-w-0">
-                        <h3 className="text-sm font-semibold mb-0.5 truncate text-white">{team.name}</h3>
+                        <h3 className="text-sm font-semibold mb-1 truncate text-white">{team.name}</h3>
                         <div className="flex items-center gap-1.5 text-xs text-zinc-400">
                           <MapPin className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">{team.area || 'Karachi'} • {team.age_group}</span>
@@ -260,23 +260,23 @@ export default function MatchmakingScreen({ onRequestMatch }: { onRequestMatch: 
                   </div>
 
                   {/* Team Stats */}
-                  <div className="grid grid-cols-3 gap-2.5 mb-3 pb-3 border-b border-zinc-800">
+                  <div className="grid grid-cols-3 gap-3 mb-4 pb-4 border-b border-zinc-800">
                     <div>
-                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-0.5">
+                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-1">
                         <TrendingUp className="w-3 h-3" />
                         Win Rate
                       </div>
                       <div className="text-sm font-medium text-white">{winRate}%</div>
                     </div>
                     <div>
-                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-0.5">
+                      <div className="flex items-center gap-1 text-zinc-400 text-xs mb-1">
                         <Target className="w-3 h-3" />
                         Wins
                       </div>
                       <div className="text-sm font-medium text-white">{team.wins || 0}</div>
                     </div>
                     <div>
-                      <div className="text-zinc-400 text-xs mb-0.5">Level</div>
+                      <div className="text-zinc-400 text-xs mb-1">Level</div>
                       <div className="text-sm font-medium text-white">{team.team_level || 5}/10</div>
                     </div>
                   </div>
