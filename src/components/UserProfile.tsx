@@ -119,30 +119,33 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
   return (
     <div className="min-h-screen bg-black">
       {/* Header with Cover */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black h-28 relative">
-        <div className="absolute -bottom-14 left-6 flex items-end gap-4">
-          <div className="w-28 h-28 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)]">
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black h-40 relative">
+        <div className="absolute -bottom-16 left-6 flex items-end gap-4">
+          <div className="w-32 h-32 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)]">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full rounded-2xl object-cover" />
             ) : (
-              <User className="w-14 h-14 text-black" />
+              <User className="w-16 h-16 text-black" />
             )}
           </div>
         </div>
       </div>
 
-      <div className="px-6 pt-20 pb-6">
+      <div className="px-6 pt-24 pb-6">
         {/* User Info */}
-        <div className="flex items-start justify-between mb-5">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold mb-1">{profile?.full_name || 'User'}</h1>
+            <h1 className="text-2xl font-semibold mb-1 text-white">{profile?.full_name || 'User'}</h1>
             <p className="text-sm text-zinc-500">{team ? 'Team Captain' : player ? 'Player' : 'Member'}</p>
+            {team && (
+              <p className="text-sm text-zinc-600 mt-1">{team.name}</p>
+            )}
           </div>
           <button 
             onClick={onEditProfile}
-            className="bg-zinc-900/80 border border-[#00FF57]/50 text-[#00FF57] p-2 rounded-lg active:scale-95 transition-transform hover:bg-zinc-900 hover:border-[#00FF57] flex-shrink-0"
+            className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-3 rounded-xl active:scale-95 transition-transform flex-shrink-0"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-5 h-5" />
           </button>
         </div>
 
