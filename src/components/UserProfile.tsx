@@ -131,7 +131,7 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
         </div>
       </div>
 
-      <div className="px-6 pt-18 pb-6">
+      <div className="px-6 pt-20 pb-6">
         {/* User Info */}
         <div className="flex items-start justify-between mb-5">
           <div className="flex-1">
