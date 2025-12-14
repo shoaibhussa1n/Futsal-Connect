@@ -320,15 +320,15 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
 
         {/* Team Info Section (only for lifetime team) */}
         {selectedTab === 'team' && userTeam && (
-          <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-5 border border-[#00FF57]/20">
-            <h3 className="text-base font-semibold mb-4 text-white">Your Team: <span className="text-[#00FF57]">{userTeam.name}</span></h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-3 bg-black/50 rounded-lg border border-zinc-800/50">
-                <div className="text-xl font-semibold text-white mb-1">-</div>
+          <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-4 border border-[#00FF57]/20">
+            <h3 className="text-sm font-semibold mb-3 text-white">Your Team: <span className="text-[#00FF57]">{userTeam.name}</span></h3>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="text-center p-2.5 bg-black/50 rounded-lg border border-zinc-800/50">
+                <div className="text-lg font-semibold text-white mb-0.5">-</div>
                 <div className="text-xs text-zinc-500">Players</div>
               </div>
-              <div className="text-center p-3 bg-black/50 rounded-lg border border-zinc-800/50">
-                <div className="text-xl font-semibold text-[#00FF57] mb-1">-</div>
+              <div className="text-center p-2.5 bg-black/50 rounded-lg border border-zinc-800/50">
+                <div className="text-lg font-semibold text-[#00FF57] mb-0.5">-</div>
                 <div className="text-xs text-zinc-500">Slots Left</div>
               </div>
             </div>
