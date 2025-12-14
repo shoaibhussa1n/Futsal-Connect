@@ -166,153 +166,158 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
   return (
     <div className="min-h-screen bg-black pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-b from-zinc-900 to-black px-6 pt-12 pb-6">
-        <button onClick={onBack} className="text-[#00FF57] mb-4">
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl mb-2 text-white">{team.name}</h1>
-            <p className="text-zinc-500">{isCaptain ? 'Your Team Profile' : 'Team Profile'}</p>
-          </div>
+      <div className="bg-gradient-to-b from-zinc-900 to-black px-6 pt-12 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={onBack} className="text-[#00FF57]">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
           {isCaptain && onEditTeam && (
             <button 
               onClick={onEditTeam}
-              className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-3 rounded-xl active:scale-95 transition-transform"
+              className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-2.5 rounded-xl active:scale-95 transition-transform"
             >
               <Edit className="w-5 h-5" />
             </button>
           )}
         </div>
+        <p className="text-sm text-zinc-500 mb-6">{isCaptain ? 'Your Team Profile' : 'Team Profile'}</p>
       </div>
 
-      <div className="px-6">
-        {/* Team Logo & Rating */}
-        <div className="bg-gradient-to-br from-zinc-900 to-black rounded-2xl p-6 mb-6 border border-[#00FF57]/20 text-center">
-          {team.logo_url ? (
-            <img src={team.logo_url} alt={team.name} className="w-24 h-24 mx-auto mb-4 rounded-2xl object-cover" />
-          ) : (
-            <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(0,255,87,0.3)]">
-              <Users className="w-12 h-12 text-black" />
+      <div className="px-6 -mt-2">
+        {/* Team Logo, Name & Rating */}
+        <div className="bg-gradient-to-br from-zinc-900 to-black rounded-2xl p-6 mb-4 border border-[#00FF57]/20">
+          <div className="flex items-center gap-4 mb-4">
+            {team.logo_url ? (
+              <img src={team.logo_url} alt={team.name} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-20 h-20 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-xl flex items-center justify-center shadow-[0_0_40px_rgba(0,255,87,0.3)] flex-shrink-0">
+                <Users className="w-10 h-10 text-black" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-semibold text-white mb-1 truncate">{team.name}</h1>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-[#00FF57]">{team.rating?.toFixed(1) || '5.0'}</span>
+                <span className="text-sm text-zinc-500">Rating</span>
+              </div>
             </div>
-          )}
-          <div className="text-5xl text-[#00FF57] mb-2">{team.rating?.toFixed(1) || '5.0'}</div>
-          <p className="text-zinc-500">Team Rating</p>
+          </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
             <div className="flex items-center gap-2 text-[#00FF57] mb-2">
-              <Trophy className="w-5 h-5" />
+              <Trophy className="w-4 h-4" />
               <span className="text-xs text-zinc-400">Wins</span>
             </div>
-            <div className="text-3xl text-white">{team.wins || 0}</div>
+            <div className="text-2xl font-semibold text-white">{team.wins || 0}</div>
           </div>
 
           <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
             <div className="flex items-center gap-2 text-zinc-500 mb-2">
-              <TrendingUp className="w-5 h-5" />
+              <TrendingUp className="w-4 h-4" />
               <span className="text-xs text-zinc-400">Losses</span>
             </div>
-            <div className="text-3xl text-zinc-400">{team.losses || 0}</div>
+            <div className="text-2xl font-semibold text-zinc-400">{team.losses || 0}</div>
           </div>
 
           <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
             <div className="flex items-center gap-2 text-[#FF6600] mb-2">
-              <Target className="w-5 h-5" />
+              <Target className="w-4 h-4" />
               <span className="text-xs text-zinc-400">Total Goals</span>
             </div>
-            <div className="text-3xl text-white">{team.total_goals || 0}</div>
+            <div className="text-2xl font-semibold text-white">{team.total_goals || 0}</div>
           </div>
 
           <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
             <div className="flex items-center gap-2 text-[#007BFF] mb-2">
-              <Award className="w-5 h-5" />
+              <Award className="w-4 h-4" />
               <span className="text-xs text-zinc-400">MVPs</span>
             </div>
-            <div className="text-3xl text-white">{team.total_mvps || 0}</div>
+            <div className="text-2xl font-semibold text-white">{team.total_mvps || 0}</div>
           </div>
         </div>
 
-        {/* Performance Stats */}
-        <div className="bg-zinc-900 rounded-xl p-5 mb-6 border border-zinc-800">
-          <h3 className="text-lg mb-4">Performance</h3>
-          <div className="space-y-4">
+        {/* Rank & Performance Combined */}
+        <div className="bg-zinc-900 rounded-xl p-5 mb-4 border border-zinc-800">
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-zinc-400">Win Rate</span>
-                <span className="text-[#00FF57]">{winRate}%</span>
-              </div>
-              <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#00FF57] to-[#00cc44] h-full rounded-full" style={{ width: `${winRate}%` }}></div>
+              <p className="text-zinc-400 text-xs mb-1">Current Rank</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-2xl font-bold text-[#FF6600]">{rank ? `#${rank}` : 'N/A'}</h3>
+                <span className="text-xs text-zinc-500">in Karachi</span>
               </div>
             </div>
-
-            <div>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-zinc-400">Total Matches</span>
-                <span className="text-white">{team.wins + team.losses + (team.draws || 0)}</span>
-              </div>
-              <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#FF6600] to-[#cc5200] h-full rounded-full" style={{ width: '100%' }}></div>
-              </div>
+            <div className="w-14 h-14 bg-gradient-to-br from-[#FF6600] to-[#cc5200] rounded-xl flex items-center justify-center">
+              <Trophy className="w-7 h-7 text-white" />
             </div>
           </div>
-        </div>
+          
+          <div className="pt-4 border-t border-zinc-800">
+            <h3 className="text-sm font-medium text-zinc-300 mb-4">Performance</h3>
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-zinc-400">Win Rate</span>
+                  <span className="text-[#00FF57] font-medium">{winRate}%</span>
+                </div>
+                <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-[#00FF57] to-[#00cc44] h-full rounded-full" style={{ width: `${winRate}%` }}></div>
+                </div>
+              </div>
 
-        {/* Team Rank Card */}
-        <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-5 mb-6 border border-zinc-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-zinc-400 text-sm mb-1">Current Rank</p>
-              <h3 className="text-3xl text-[#FF6600]">{rank ? `#${rank}` : 'N/A'}</h3>
-              <p className="text-zinc-500 text-sm mt-1">in Karachi</p>
-            </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-[#FF6600] to-[#cc5200] rounded-xl flex items-center justify-center">
-              <Trophy className="w-8 h-8 text-white" />
+              <div>
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-zinc-400">Total Matches</span>
+                  <span className="text-white font-medium">{team.wins + team.losses + (team.draws || 0)}</span>
+                </div>
+                <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-[#FF6600] to-[#cc5200] h-full rounded-full" style={{ width: '100%' }}></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Players List */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl">Team Players</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-white">Team Players</h2>
             {isCaptain && onInvitePlayers && (
               <button 
                 onClick={onInvitePlayers}
-                className="text-[#00FF57] text-sm flex items-center gap-1 active:scale-95 transition-transform"
+                className="text-[#00FF57] text-sm flex items-center gap-1.5 active:scale-95 transition-transform font-medium"
               >
                 <UserPlus className="w-4 h-4" />
-                <span>Invite Player</span>
+                <span>Invite</span>
               </button>
             )}
           </div>
 
           {members.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {members.map((member) => {
                 const player = member.players;
                 const profile = player?.profiles;
                 const isMemberCaptain = member.role === 'captain';
                 
                 return (
-                  <div key={member.id} className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+                  <div key={member.id} className="bg-zinc-900 rounded-xl p-3.5 border border-zinc-800">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
                         {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt={profile.full_name} className="w-12 h-12 rounded-lg object-cover" />
+                          <img src={profile.avatar_url} alt={profile.full_name} className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
                         ) : (
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center">
-                            <span className="text-black font-bold">{profile?.full_name?.charAt(0) || 'P'}</span>
+                          <div className="w-11 h-11 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span className="text-black font-bold text-sm">{profile?.full_name?.charAt(0) || 'P'}</span>
                           </div>
                         )}
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-medium">{profile?.full_name || 'Unknown Player'}</p>
+                            <p className="text-sm font-medium text-white truncate">{profile?.full_name || 'Unknown Player'}</p>
                             {isMemberCaptain && (
-                              <span className="bg-[#00FF57] text-black px-2 py-0.5 rounded-full text-xs font-medium">
+                              <span className="bg-[#00FF57] text-black px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0">
                                 Captain
                               </span>
                             )}
@@ -328,31 +333,27 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="flex items-center gap-3">
-                            {player?.goals !== undefined && (
-                              <div className="text-center">
-                                <p className="text-sm text-white font-medium">{player.goals || 0}</p>
-                                <p className="text-xs text-zinc-500">Goals</p>
-                              </div>
-                            )}
-                            {player?.mvps > 0 && (
-                              <div className="text-center">
-                                <div className="flex items-center gap-1 justify-center">
-                                  <Award className="w-4 h-4 text-[#FF6600]" />
-                                  <span className="text-sm text-[#FF6600] font-medium">{player.mvps}</span>
-                                </div>
-                                <p className="text-xs text-zinc-500">MVP</p>
-                              </div>
-                            )}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {player?.goals !== undefined && (
+                          <div className="text-center">
+                            <p className="text-sm text-white font-semibold">{player.goals || 0}</p>
+                            <p className="text-xs text-zinc-500">Goals</p>
                           </div>
-                        </div>
+                        )}
+                        {player?.mvps > 0 && (
+                          <div className="text-center">
+                            <div className="flex items-center gap-1 justify-center">
+                              <Award className="w-3.5 h-3.5 text-[#FF6600]" />
+                              <span className="text-sm text-[#FF6600] font-semibold">{player.mvps}</span>
+                            </div>
+                            <p className="text-xs text-zinc-500">MVP</p>
+                          </div>
+                        )}
                         {isCaptain && !isMemberCaptain && (
                           <button
                             onClick={() => handleRemoveMember(member.id, profile?.full_name || 'Player')}
                             disabled={removingMember === member.id}
-                            className="p-2 text-red-400 hover:text-red-300 active:scale-95 transition-transform disabled:opacity-50"
+                            className="p-1.5 text-red-400 hover:text-red-300 active:scale-95 transition-transform disabled:opacity-50 ml-1"
                           >
                             {removingMember === member.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -388,9 +389,9 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
         {isCaptain && onEditTeam && (
           <button 
             onClick={onEditTeam}
-            className="w-full bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] py-4 rounded-xl active:scale-95 transition-transform mb-6 flex items-center justify-center gap-2"
+            className="w-full bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] py-3.5 rounded-xl active:scale-95 transition-transform mb-6 flex items-center justify-center gap-2 font-medium"
           >
-            <Edit className="w-5 h-5" />
+            <Edit className="w-4 h-4" />
             <span>Edit Team Details</span>
           </button>
         )}
