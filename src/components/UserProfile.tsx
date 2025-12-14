@@ -119,54 +119,55 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
   return (
     <div className="min-h-screen bg-black pb-20">
       {/* Header with Cover */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black h-32 relative">
-        <div className="absolute -bottom-12 left-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)]">
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-black h-24"></div>
+
+      <div className="px-6 pt-6 pb-6">
+        {/* User Info with Avatar */}
+        <div className="flex items-start gap-4 mb-6">
+          <div className="w-24 h-24 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)] flex-shrink-0">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full rounded-2xl object-cover" />
             ) : (
               <User className="w-12 h-12 text-black" />
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="px-6 pt-16 pb-6">
-        {/* User Info */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1 pr-3">
-            <h1 className="text-2xl font-semibold mb-1 text-white">{profile?.full_name || 'User'}</h1>
-            <p className="text-sm text-zinc-500 mb-1">{team ? 'Team Captain' : player ? 'Player' : 'Member'}</p>
-            {team && (
-              <p className="text-sm text-zinc-600">{team.name}</p>
-            )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-semibold mb-1 text-white truncate">{profile?.full_name || 'User'}</h1>
+                <p className="text-sm text-zinc-500 mb-1">{team ? 'Team Captain' : player ? 'Player' : 'Member'}</p>
+                {team && (
+                  <p className="text-sm text-zinc-600 truncate">{team.name}</p>
+                )}
+              </div>
+              <button 
+                onClick={onEditProfile}
+                className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-2 rounded-xl active:scale-95 transition-transform flex-shrink-0 ml-2"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <button 
-            onClick={onEditProfile}
-            className="bg-zinc-900 border-2 border-[#00FF57] text-[#00FF57] p-2.5 rounded-xl active:scale-95 transition-transform flex-shrink-0"
-          >
-            <Edit className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Quick Stats */}
         {player && (
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            <div className="bg-zinc-900 rounded-xl p-4 text-center border border-zinc-800">
-              <Trophy className="w-5 h-5 mx-auto mb-2 text-[#00FF57]" />
-              <div className="text-xl font-bold text-white mb-1">{player.matches_played || 0}</div>
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="bg-zinc-900 rounded-xl p-3 text-center border border-zinc-800">
+              <Trophy className="w-4 h-4 mx-auto mb-1.5 text-[#00FF57]" />
+              <div className="text-lg font-bold text-white mb-0.5">{player.matches_played || 0}</div>
               <div className="text-xs text-zinc-500">Matches</div>
             </div>
 
-            <div className="bg-zinc-900 rounded-xl p-4 text-center border border-zinc-800">
-              <Target className="w-5 h-5 mx-auto mb-2 text-[#FF6600]" />
-              <div className="text-xl font-bold text-white mb-1">{player.goals || 0}</div>
+            <div className="bg-zinc-900 rounded-xl p-3 text-center border border-zinc-800">
+              <Target className="w-4 h-4 mx-auto mb-1.5 text-[#FF6600]" />
+              <div className="text-lg font-bold text-white mb-0.5">{player.goals || 0}</div>
               <div className="text-xs text-zinc-500">Goals</div>
             </div>
 
-            <div className="bg-zinc-900 rounded-xl p-4 text-center border border-zinc-800">
-              <Award className="w-5 h-5 mx-auto mb-2 text-[#007BFF]" />
-              <div className="text-xl font-bold text-white mb-1">{player.mvps || 0}</div>
+            <div className="bg-zinc-900 rounded-xl p-3 text-center border border-zinc-800">
+              <Award className="w-4 h-4 mx-auto mb-1.5 text-[#007BFF]" />
+              <div className="text-lg font-bold text-white mb-0.5">{player.mvps || 0}</div>
               <div className="text-xs text-zinc-500">MVPs</div>
             </div>
           </div>
@@ -174,7 +175,7 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
 
         {/* My Team Section */}
         {team && onViewTeamProfile && (
-          <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-4 mb-5 border border-[#00FF57]/20 cursor-pointer active:scale-98 transition-transform" onClick={() => onViewTeamProfile(team.id)}>
+          <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-4 mb-6 border border-[#00FF57]/20 cursor-pointer active:scale-98 transition-transform" onClick={() => onViewTeamProfile(team.id)}>
             <div className="flex items-center gap-4">
               {team.logo_url ? (
                 <img src={team.logo_url} alt={team.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
@@ -206,28 +207,28 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
         )}
 
         {/* Personal Info Section */}
-        <div className="bg-zinc-900 rounded-xl p-5 mb-5 border border-zinc-800">
-          <h3 className="text-base font-semibold mb-4 text-white">Personal Information</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-              <span className="text-zinc-400 text-sm">Email</span>
-              <span className="text-white text-sm font-medium">{profile?.email || user?.email || 'N/A'}</span>
+        <div className="bg-zinc-900 rounded-xl p-4 mb-6 border border-zinc-800">
+          <h3 className="text-sm font-semibold mb-3 text-white">Personal Information</h3>
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
+              <span className="text-zinc-400 text-xs">Email</span>
+              <span className="text-white text-xs font-medium truncate ml-2">{profile?.email || user?.email || 'N/A'}</span>
             </div>
             {profile?.phone && (
-              <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                <span className="text-zinc-400 text-sm">Phone</span>
-                <span className="text-white text-sm font-medium">{profile.phone}</span>
+              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
+                <span className="text-zinc-400 text-xs">Phone</span>
+                <span className="text-white text-xs font-medium">{profile.phone}</span>
               </div>
             )}
             {player && (
               <>
-                <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                  <span className="text-zinc-400 text-sm">Position</span>
-                  <span className="text-white text-sm font-medium">{player.position || 'N/A'}</span>
+                <div className="flex items-center justify-between py-1.5 border-b border-zinc-800">
+                  <span className="text-zinc-400 text-xs">Position</span>
+                  <span className="text-white text-xs font-medium">{player.position || 'N/A'}</span>
                 </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-zinc-400 text-sm">Age Group</span>
-                  <span className="text-white text-sm font-medium">{player.age ? `${player.age} years` : 'N/A'}</span>
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-zinc-400 text-xs">Age Group</span>
+                  <span className="text-white text-xs font-medium">{player.age ? `${player.age} years` : 'N/A'}</span>
                 </div>
               </>
             )}
@@ -269,10 +270,10 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
         )}
 
         {/* Settings & Actions */}
-        <div className="space-y-2.5">
+        <div className="space-y-4">
           {/* Player Features Section */}
           {!player && (
-            <div className="bg-gradient-to-br from-[#00FF57]/10 to-[#00cc44]/10 border border-[#00FF57]/30 rounded-xl p-4 mb-2">
+            <div className="bg-gradient-to-br from-[#00FF57]/10 to-[#00cc44]/10 border border-[#00FF57]/30 rounded-xl p-4 mb-4">
               <h3 className="text-sm font-medium text-[#00FF57] mb-3">Player Features</h3>
               <button 
                 onClick={onPlayerRegister}
@@ -288,31 +289,23 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
           )}
 
           {player && (
-            <>
+            <div className="grid grid-cols-2 gap-3 mb-6">
               <button 
                 onClick={onPlayerMarketplace}
-                className="w-full bg-zinc-900 border border-zinc-800 text-white py-3.5 rounded-xl flex items-center justify-between px-5 active:scale-95 transition-transform hover:bg-zinc-800"
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-zinc-800"
               >
-                <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-[#00A3FF]" />
-                  <span className="font-medium">Player Marketplace</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-500" />
+                <Users className="w-6 h-6 text-[#00A3FF]" />
+                <span className="text-xs font-medium text-white text-center">Marketplace</span>
               </button>
               <button 
                 onClick={onPlayerNotifications}
-                className="w-full bg-zinc-900 border border-zinc-800 text-white py-3.5 rounded-xl flex items-center justify-between px-5 active:scale-95 transition-transform hover:bg-zinc-800"
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-zinc-800 relative"
               >
-                <div className="flex items-center gap-3">
-                  <Bell className="w-5 h-5 text-[#FF6600]" />
-                  <span className="font-medium">Player Notifications</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">0</span>
-                  <ChevronRight className="w-4 h-4 text-zinc-500" />
-                </div>
+                <Bell className="w-6 h-6 text-[#FF6600]" />
+                <span className="text-xs font-medium text-white text-center">Notifications</span>
+                <span className="absolute top-2 right-2 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-medium">0</span>
               </button>
-            </>
+            </div>
           )}
 
           <button 
@@ -325,7 +318,7 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
 
           <button
             onClick={handleLogout}
-            className="w-full bg-red-900/20 border-2 border-red-500 text-red-500 py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-red-900/30 mt-4 font-medium"
+            className="w-full bg-red-900/20 border-2 border-red-500 text-red-500 py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-red-900/30 font-medium"
           >
             <LogOut className="w-5 h-5" />
             Logout
