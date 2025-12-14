@@ -151,12 +151,14 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl font-semibold mb-1 text-white truncate">{profile?.full_name || 'User'}</h1>
-                <p className="text-sm text-zinc-500 mb-1">{team ? 'Team Captain' : player ? 'Player' : 'Member'}</p>
                 {team && (
-                  <p className="text-sm text-zinc-600 truncate">{team.name} (C)</p>
+                  <p className="text-sm text-zinc-500 mb-1 truncate">{team.name} (C)</p>
                 )}
-                {!team && playerTeam && player && (
-                  <p className="text-sm text-zinc-600 truncate">{playerTeam.name} - {player.position || 'N/A'}</p>
+                {!team && playerTeam && (
+                  <p className="text-sm text-zinc-500 mb-1 truncate">{playerTeam.name}</p>
+                )}
+                {player && player.position && (
+                  <p className="text-sm text-zinc-600 truncate">{player.position}</p>
                 )}
               </div>
               <button 
