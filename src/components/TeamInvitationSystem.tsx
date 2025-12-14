@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, UserPlus, Clock, Users, Loader2 } from 'lucide-react';
+import { User, UserPlus, Clock, Users, Loader2, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlayers, createPlayerInvitation } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -16,6 +16,7 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
   const [inviting, setInviting] = useState<string | null>(null);
   const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
   const [userTeam, setUserTeam] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadData();
@@ -146,7 +147,7 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
         <p className="text-zinc-500">Invite players to join your team</p>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-6 py-4 space-y-4">
         {/* Tab Selector */}
         <div className="bg-zinc-900 rounded-xl p-1.5 grid grid-cols-2 gap-1">
           <button
@@ -178,8 +179,8 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
         </div>
 
         {/* Info Card */}
-        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-xl p-4">
-          <p className="text-sm text-blue-400">
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-xl p-3">
+          <p className="text-xs text-blue-400">
             {selectedTab === 'team' 
               ? '💡 Invite players to permanently join your team roster. They will be part of all future matches.'
               : '💡 Hire players for a single match. Perfect for filling in missing positions or trying out new players.'
@@ -187,46 +188,75 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
           </p>
         </div>
 
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <input
+            type="text"
+            placeholder="Search players by name or position..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-[#00FF57]/50 transition-colors"
+          />
+        </div>
+
         {/* Available Players List */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg text-zinc-400">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base text-zinc-400">
               {selectedTab === 'team' ? 'Available for Teams' : 'Available for Hire'}
             </h2>
-            <span className="text-sm text-zinc-600">{availablePlayers.length} players</span>
+            <span className="text-sm text-zinc-600">
+              {availablePlayers.filter(p => {
+                const query = searchQuery.toLowerCase();
+                const name = p.profiles?.full_name?.toLowerCase() || '';
+                const position = p.position?.toLowerCase() || '';
+                return !query || name.includes(query) || position.includes(query);
+              }).length} players
+            </span>
           </div>
 
-          {availablePlayers.length === 0 ? (
+          {availablePlayers.filter(p => {
+            const query = searchQuery.toLowerCase();
+            const name = p.profiles?.full_name?.toLowerCase() || '';
+            const position = p.position?.toLowerCase() || '';
+            return !query || name.includes(query) || position.includes(query);
+          }).length === 0 ? (
             <div className="text-center py-12">
               <User className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
               <p className="text-zinc-500">No available players found</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {availablePlayers.map((player) => (
+            <div className="space-y-3">
+              {availablePlayers.filter(p => {
+                const query = searchQuery.toLowerCase();
+                const name = p.profiles?.full_name?.toLowerCase() || '';
+                const position = p.position?.toLowerCase() || '';
+                return !query || name.includes(query) || position.includes(query);
+              }).map((player) => (
                 <div
                   key={player.id}
-                  className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-5 border border-zinc-800"
+                  className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-4 border border-zinc-800"
                 >
-                  <div className="flex gap-4 mb-4">
+                  <div className="flex gap-3 mb-3">
                     {/* Player Photo */}
                     {player.photo_url ? (
-                      <img src={player.photo_url} alt={player.profiles?.full_name} className="w-16 h-16 rounded-xl object-cover" />
+                      <img src={player.photo_url} alt={player.profiles?.full_name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
                     ) : (
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-xl flex items-center justify-center flex-shrink-0">
-                        <User className="w-8 h-8 text-black" />
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
+                        <User className="w-6 h-6 text-black" />
                       </div>
                     )}
 
                     {/* Player Info */}
-                    <div className="flex-1">
-                      <h3 className="text-lg mb-1">{player.profiles?.full_name || 'Unknown Player'}</h3>
-                      <p className="text-sm text-zinc-500 mb-2">{player.position || 'Any Position'}</p>
-                      <div className="flex gap-2 flex-wrap">
-                        <span className="bg-[#00FF57]/20 text-[#00FF57] px-2 py-1 rounded-md text-xs">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-medium mb-0.5 truncate">{player.profiles?.full_name || 'Unknown Player'}</h3>
+                      <p className="text-xs text-zinc-500 mb-2">{player.position || 'Any Position'}</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <span className="bg-[#00FF57]/20 text-[#00FF57] px-2 py-0.5 rounded text-xs">
                           Skill: {player.skill_level || 5}/10
                         </span>
-                        <span className="bg-zinc-800 text-zinc-400 px-2 py-1 rounded-md text-xs">
+                        <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-xs">
                           {player.matches_played || 0} matches
                         </span>
                       </div>
@@ -235,25 +265,25 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
 
                   {/* Fee (for per-match) */}
                   {selectedTab === 'match' && (
-                    <div className="mb-4 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-                      <p className="text-sm text-orange-400">
+                    <div className="mb-3 p-2 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                      <p className="text-xs text-orange-400">
                         Match Fee: <span className="text-orange-300 font-medium">Rs. 500</span>
                       </p>
                     </div>
                   )}
 
                   {/* Stats Bar */}
-                  <div className="flex gap-4 mb-4 p-3 bg-black/50 rounded-lg">
+                  <div className="flex gap-3 mb-3 p-2.5 bg-black/50 rounded-lg">
                     <div className="flex-1 text-center">
-                      <div className="text-xl text-white mb-1">{player.matches_played || 0}</div>
+                      <div className="text-lg text-white mb-0.5">{player.matches_played || 0}</div>
                       <div className="text-xs text-zinc-500">Matches</div>
                     </div>
                     <div className="flex-1 text-center">
-                      <div className="text-xl text-[#00FF57] mb-1">{player.rating?.toFixed(1) || '5.0'}</div>
+                      <div className="text-lg text-[#00FF57] mb-0.5">{player.rating?.toFixed(1) || '5.0'}</div>
                       <div className="text-xs text-zinc-500">Rating</div>
                     </div>
                     <div className="flex-1 text-center">
-                      <div className="text-xl text-[#00A3FF] mb-1">
+                      <div className="text-lg text-[#00A3FF] mb-0.5">
                         {selectedTab === 'team' ? '✓' : '500'}
                       </div>
                       <div className="text-xs text-zinc-500">
@@ -263,21 +293,21 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <button className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg py-2.5 text-white text-sm active:scale-95 transition-transform">
+                  <div className="flex gap-2">
+                    <button className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg py-2 text-white text-xs active:scale-95 transition-transform">
                       View Profile
                     </button>
                     <button
                       onClick={() => handleInvite(player.id, selectedTab)}
                       disabled={inviting === player.id}
-                      className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2.5 text-black text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg py-2 text-black text-xs font-medium flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {inviting === player.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
                         <>
-                          <UserPlus className="w-4 h-4" />
-                          {selectedTab === 'team' ? 'Invite to Team' : 'Hire for Match'}
+                          <UserPlus className="w-3.5 h-3.5" />
+                          {selectedTab === 'team' ? 'Invite' : 'Hire'}
                         </>
                       )}
                     </button>
