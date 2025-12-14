@@ -12,6 +12,7 @@ interface HomeScreenProps {
   onViewLeaderboard?: () => void;
   onViewTeamProfile?: () => void;
   onTeamNotifications?: () => void;
+  onViewAllMatches?: () => void;
 }
 
 export default function HomeScreen({ 
@@ -20,7 +21,8 @@ export default function HomeScreen({
   onUpdateResult,
   onViewLeaderboard,
   onViewTeamProfile,
-  onTeamNotifications
+  onTeamNotifications,
+  onViewAllMatches
 }: HomeScreenProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -289,7 +291,12 @@ export default function HomeScreen({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg text-zinc-400">Upcoming Matches</h2>
             {upcomingMatches.length > 0 && (
-            <button className="text-[#00FF57] text-sm">View All</button>
+            <button 
+              onClick={onViewAllMatches}
+              className="text-[#00FF57] text-sm hover:text-[#00cc44] transition-colors"
+            >
+              View All
+            </button>
             )}
           </div>
 

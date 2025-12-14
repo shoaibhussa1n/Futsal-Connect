@@ -21,6 +21,7 @@ import PlayerMarketplace from './components/PlayerMarketplace';
 import TeamInvitationSystem from './components/TeamInvitationSystem';
 import PlayerNotifications from './components/PlayerNotifications';
 import TeamNotifications from './components/TeamNotifications';
+import UpcomingMatchesScreen from './components/UpcomingMatchesScreen';
 import { checkProfileComplete, checkPlayerProfile, checkTeamProfile, getProfile } from './lib/api';
 import { supabase } from './lib/supabase';
 import { Loader2 } from 'lucide-react';
@@ -344,6 +345,10 @@ export default function App() {
             // Request rejected, can show notification
           }} 
         />;
+      case 'upcomingMatches':
+        return <UpcomingMatchesScreen 
+          onBack={() => setCurrentScreen('main')} 
+        />;
       case 'main':
         return renderMainApp();
       default:
@@ -368,6 +373,7 @@ export default function App() {
             setCurrentScreen('teamProfile');
           }}
           onTeamNotifications={() => setCurrentScreen('teamNotifications')}
+          onViewAllMatches={() => setCurrentScreen('upcomingMatches')}
         />;
         break;
       case 'matchmaking':
