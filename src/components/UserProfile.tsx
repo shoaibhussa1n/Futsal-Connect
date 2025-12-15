@@ -134,7 +134,7 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
 
   return (
     <div className="min-h-screen bg-black pb-20">
-      <div className="px-6 pt-6 pb-6">
+      <div className="px-6 pt-8 pb-6">
         {/* User Info with Avatar */}
         <div className="flex items-start gap-4 mb-6">
           <div className="w-24 h-24 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)] flex-shrink-0 overflow-hidden">
