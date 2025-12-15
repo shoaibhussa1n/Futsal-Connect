@@ -3,6 +3,7 @@ import { Search, Filter, User, Target, TrendingUp, Send, Loader2 } from 'lucide-
 import { getPlayers, createPlayerInvitation } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import Notification from './Notification';
 
 interface PlayerMarketplaceProps {
   onBack: () => void;
@@ -23,6 +24,7 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
   const [players, setPlayers] = useState<any[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<any[]>([]);
   const [userTeam, setUserTeam] = useState<any>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
 
   const positions = ['all', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward', 'Winger'];
 
@@ -63,12 +65,12 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
 
   const handleSendRequest = async (playerId: string) => {
     if (!userTeam) {
-      alert('You need to create a team first to send requests to players');
+      setNotification({ message: 'You need to create a team first to send requests to players', type: 'warning' });
       return;
     }
 
     if (!playerId) {
-      alert('Invalid player ID');
+      setNotification({ message: 'Invalid player ID', type: 'error' });
       return;
     }
 
@@ -94,17 +96,17 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
 
       if (error) {
         console.error('Error sending invitation:', error);
-        alert(error.message || 'Failed to send request. Please check console for details.');
+        setNotification({ message: error.message || 'Failed to send request. Please check console for details.', type: 'error' });
       } else {
         console.log('Invitation sent successfully:', data);
-        alert('Request sent successfully!');
+        setNotification({ message: 'Request sent successfully!', type: 'success' });
         if (onSendRequest) {
           onSendRequest(playerId);
         }
       }
     } catch (err: any) {
       console.error('Exception sending invitation:', err);
-      alert(err.message || 'An error occurred. Please check console for details.');
+      setNotification({ message: err.message || 'An error occurred. Please check console for details.', type: 'error' });
     } finally {
       setSendingRequest(null);
     }
@@ -436,6 +438,15 @@ export default function PlayerMarketplace({ onBack, onViewPlayer, onSendRequest 
         </div>
         )}
       </div>
+      
+      {/* Custom Notification */}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }

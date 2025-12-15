@@ -320,9 +320,13 @@ export default function HomeScreen({
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-black" />
-                  </div>
+                  {userTeam?.logo_url ? (
+                    <img src={userTeam.logo_url} alt={userTeam.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Users className="w-5 h-5 text-black" />
+                    </div>
+                  )}
                   <div>
                           <p className="text-sm">{userTeam?.name || 'Your Team'}</p>
                           <p className="text-xs text-zinc-500">Rating: {userTeam?.rating?.toFixed(1) || '5.0'}</p>
@@ -334,9 +338,13 @@ export default function HomeScreen({
                           <p className="text-sm text-right">{opponent?.name || 'Opponent'}</p>
                           <p className="text-xs text-zinc-500 text-right">Rating: {opponent?.rating?.toFixed(1) || '5.0'}</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#007BFF] to-[#0056b3] rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
+                  {opponent?.logo_url ? (
+                    <img src={opponent.logo_url} alt={opponent.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#007BFF] to-[#0056b3] rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                  )}
                 </div>
               </div>
                     {match.location && (

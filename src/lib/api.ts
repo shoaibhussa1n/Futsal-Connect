@@ -262,6 +262,12 @@ export async function submitMatchResult(
     return { data: null, error: matchError };
   }
 
+  // Delete existing goal scorers first (in case of edit)
+  await supabase
+    .from('goal_scorers')
+    .delete()
+    .eq('match_id', matchId);
+
   // Add goal scorers
   if (goalScorers.length > 0) {
     const { error: goalsError } = await supabase

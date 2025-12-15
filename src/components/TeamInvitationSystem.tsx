@@ -3,6 +3,7 @@ import { User, UserPlus, Clock, Users, Loader2, Search, X, Calendar, MapPin, Dol
 import { useAuth } from '../contexts/AuthContext';
 import { getPlayers, createPlayerInvitation } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import Notification from './Notification';
 
 interface TeamInvitationSystemProps {
   onBack: () => void;
@@ -23,6 +24,7 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
   const [matchTime, setMatchTime] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
   const [perHeadContribution, setPerHeadContribution] = useState('');
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -93,7 +95,7 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
     perHeadContribution: string;
   }) => {
     if (!userTeam) {
-      alert('You need to create a team first');
+      setNotification({ message: 'You need to create a team first', type: 'warning' });
       return;
     }
 
@@ -129,9 +131,9 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
       });
 
       if (error) {
-        alert(error.message || 'Failed to send invitation');
+        setNotification({ message: error.message || 'Failed to send invitation', type: 'error' });
       } else {
-        alert(`Invitation sent successfully!`);
+        setNotification({ message: 'Invitation sent successfully!', type: 'success' });
         if (onInvitePlayer) {
           onInvitePlayer(playerId, type);
         }
@@ -146,7 +148,7 @@ export default function TeamInvitationSystem({ onBack, onInvitePlayer }: TeamInv
         }
       }
     } catch (err: any) {
-      alert(err.message || 'An error occurred');
+      setNotification({ message: err.message || 'An error occurred', type: 'error' });
     } finally {
       setInviting(null);
     }

@@ -22,6 +22,7 @@ import TeamInvitationSystem from './components/TeamInvitationSystem';
 import PlayerNotifications from './components/PlayerNotifications';
 import TeamNotifications from './components/TeamNotifications';
 import UpcomingMatchesScreen from './components/UpcomingMatchesScreen';
+import UpdateMatchResultsScreen from './components/UpdateMatchResultsScreen';
 import { checkProfileComplete, checkPlayerProfile, checkTeamProfile, getProfile } from './lib/api';
 import { supabase } from './lib/supabase';
 import { Loader2 } from 'lucide-react';
@@ -349,6 +350,14 @@ export default function App() {
         return <UpcomingMatchesScreen 
           onBack={() => setCurrentScreen('main')} 
         />;
+      case 'updateMatchResults':
+        return <UpdateMatchResultsScreen 
+          onBack={() => setCurrentScreen('main')}
+          onSelectMatch={(matchId) => {
+            sessionStorage.setItem('matchId', matchId);
+            setCurrentScreen('matchResult');
+          }}
+        />;
       case 'main':
         return renderMainApp();
       default:
@@ -363,9 +372,8 @@ export default function App() {
         content = <HomeScreen 
           onCreateTeam={() => setCurrentScreen('teamRegistration')}
           onCreateMatch={() => setActiveTab('matchmaking')}
-          onUpdateResult={(matchId) => {
-            sessionStorage.setItem('matchId', matchId);
-            setCurrentScreen('matchResult');
+          onUpdateResult={() => {
+            setCurrentScreen('updateMatchResults');
           }}
           onViewLeaderboard={() => setCurrentScreen('leaderboard')}
           onViewTeamProfile={(teamId) => {

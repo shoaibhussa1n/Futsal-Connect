@@ -69,6 +69,7 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
       setTeamB(matchData.team_b);
       setTeamAScore(matchData.team_a_score?.toString() || '');
       setTeamBScore(matchData.team_b_score?.toString() || '');
+      setMvp(matchData.mvp_player_id || '');
 
       // Get team members
       const { data: membersA } = await supabase
@@ -95,6 +96,31 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
 
       setTeamAPlayers(membersA || []);
       setTeamBPlayers(membersB || []);
+
+      // Load existing goal scorers if match is completed
+      if (matchData.status === 'completed') {
+        const { data: existingGoalScorers } = await supabase
+          .from('goal_scorers')
+          .select(`
+            *,
+            players (
+              *,
+              profiles (full_name)
+            )
+          `)
+          .eq('match_id', matchId);
+
+        if (existingGoalScorers && existingGoalScorers.length > 0) {
+          const loadedScorers: GoalScorer[] = existingGoalScorers.map((gs: any, index: number) => ({
+            id: Date.now() + index,
+            player: gs.players?.profiles?.full_name || '',
+            player_id: gs.player_id,
+            team_id: gs.team_id,
+            goals: gs.goals,
+          }));
+          setGoalScorers(loadedScorers);
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load match');
     } finally {
@@ -216,7 +242,7 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
         <button onClick={onBack} className="text-[#00FF57]">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-xl">Submit Result</h1>
+        <h1 className="text-xl">{match.status === 'completed' ? 'Update Result' : 'Submit Result'}</h1>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -384,10 +410,10 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
             {submitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Submitting...</span>
+                <span>{match.status === 'completed' ? 'Updating...' : 'Submitting...'}</span>
               </>
             ) : (
-              <span>Submit Result</span>
+              <span>{match.status === 'completed' ? 'Update Result' : 'Submit Result'}</span>
             )}
           </button>
 

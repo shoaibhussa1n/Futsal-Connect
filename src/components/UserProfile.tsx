@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Edit, LogOut, User, Trophy, Target, Award, UserPlus, Users, Bell, Loader2, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import logo from 'figma:asset/a9109d0003972ab9d286aab63c38b1a2b2dbb9dc.png';
 
 export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarketplace, onPlayerNotifications, onEditProfile, onViewTeamProfile }: { 
   onLogout: () => void;
@@ -135,24 +134,12 @@ export default function UserProfile({ onLogout, onPlayerRegister, onPlayerMarket
 
   return (
     <div className="min-h-screen bg-black pb-20">
-      {/* Header with Logo and App Name */}
-      <div className="bg-black px-6 pt-14 pb-6">
-        <div className="flex items-center gap-4">
-          <img 
-            src={logo} 
-            alt="Futsal Connect" 
-            className="w-20 h-20 object-contain"
-          />
-          <h1 className="text-3xl font-bold text-[#00FF57]">Futsal Connect</h1>
-        </div>
-      </div>
-
       <div className="px-6 pt-6 pb-6">
         {/* User Info with Avatar */}
         <div className="flex items-start gap-4 mb-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)] flex-shrink-0">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full rounded-2xl object-cover" />
+          <div className="w-24 h-24 bg-gradient-to-br from-[#00FF57] to-[#00cc44] rounded-2xl flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(0,255,87,0.3)] flex-shrink-0 overflow-hidden">
+            {player?.photo_url ? (
+              <img src={player.photo_url} alt={profile?.full_name || 'Player'} className="w-full h-full rounded-2xl object-cover" />
             ) : (
               <User className="w-12 h-12 text-black" />
             )}

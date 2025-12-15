@@ -3,6 +3,7 @@ import { ChevronLeft, Users, Calendar, MapPin, Clock, Loader2 } from 'lucide-rea
 import { useAuth } from '../contexts/AuthContext';
 import { createMatchRequest, getTeamById } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import Notification from './Notification';
 
 interface MatchRequestConfirmationProps {
   onBack: () => void;
@@ -21,6 +22,7 @@ export default function MatchRequestConfirmation({ onBack, opponentTeamId }: Mat
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedCourt, setSelectedCourt] = useState('');
   const [notes, setNotes] = useState('');
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
 
   useEffect(() => {
     loadTeams();
@@ -98,9 +100,15 @@ export default function MatchRequestConfirmation({ onBack, opponentTeamId }: Mat
       if (requestError) {
         setError(requestError.message || 'Failed to send match request');
       } else {
-        // Success - show message and go back
-        alert('Match request sent successfully! The team will be notified.');
-        onBack();
+        // Success - show notification
+        setNotification({ 
+          message: 'Match request sent successfully! The team will be notified.', 
+          type: 'success' 
+        });
+        // Wait a bit for notification to show, then go back
+        setTimeout(() => {
+          onBack();
+        }, 2000);
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -226,11 +234,17 @@ export default function MatchRequestConfirmation({ onBack, opponentTeamId }: Mat
                 required
             >
               <option value="">Choose time slot</option>
-                <option value="17:00">5:00 PM</option>
-                <option value="18:00">6:00 PM</option>
-                <option value="19:00">7:00 PM</option>
-                <option value="20:00">8:00 PM</option>
-                <option value="21:00">9:00 PM</option>
+              {Array.from({ length: 24 }, (_, i) => {
+                const hour24 = i.toString().padStart(2, '0');
+                const hour12 = i === 0 ? 12 : i > 12 ? i - 12 : i;
+                const ampm = i < 12 ? 'AM' : 'PM';
+                const displayTime = `${hour12}:00 ${ampm}`;
+                return (
+                  <option key={i} value={`${hour24}:00`}>
+                    {displayTime}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -303,6 +317,15 @@ export default function MatchRequestConfirmation({ onBack, opponentTeamId }: Mat
         </div>
       </div>
       </form>
+
+      {/* Custom Notification */}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }
