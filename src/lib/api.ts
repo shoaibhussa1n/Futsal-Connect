@@ -450,6 +450,28 @@ export async function submitMatchResult(
       .insert(goalScorersToInsert);
 
     if (goalsError) {
+      // Log detailed error for debugging
+      console.error('Goal scorers insert error:', {
+        message: goalsError.message,
+        code: goalsError.code,
+        details: goalsError.details,
+        hint: goalsError.hint,
+        data: goalScorersToInsert
+      });
+      
+      // If it's an RLS error, provide helpful message
+      if (goalsError.code === '42501' || goalsError.message?.includes('row-level security')) {
+        return { 
+          data: null, 
+          error: new Error(
+            'Permission denied: Unable to save goal scorers. ' +
+            'This might be a Row-Level Security (RLS) policy issue. ' +
+            'Please ensure you are logged in and try again. ' +
+            'If the problem persists, contact support.'
+          )
+        };
+      }
+      
       return { data: null, error: goalsError };
     }
   }
