@@ -332,6 +332,7 @@ export async function submitMatchResult(
 
   // If error is due to missing columns (400 Bad Request from PostgREST), try without verification columns (fallback)
   // Also try fallback for ANY 400 error, as schema cache issues can manifest differently
+  // PGRST204 is the PostgREST error code for schema cache issues
   if (matchError && (
     matchError.message?.includes('column') || 
     matchError.message?.includes('schema cache') ||
@@ -339,6 +340,7 @@ export async function submitMatchResult(
     matchError.message?.includes('team_a_result_submitted') ||
     matchError.message?.includes('42703') || // PostgreSQL error code for undefined column
     matchError.code === '42703' ||
+    matchError.code === 'PGRST204' || // PostgREST schema cache error
     matchError.status === 400 || // Try fallback for any 400 error
     (matchError.status === 400 && matchError.message?.toLowerCase().includes('column'))
   )) {
