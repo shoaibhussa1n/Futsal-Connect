@@ -321,16 +321,98 @@ export async function submitMatchResult(
     return { data: null, error: matchError };
   }
 
+  // Store goal scorers immediately (even before verification)
+  // This allows both teams to submit their goal scorers separately
+  const submittingTeamId = isTeamA ? currentMatch.team_a_id : currentMatch.team_b_id;
+  
+  // Get existing goal scorers to merge with new ones
+  const { data: existingGoalScorers } = await supabase
+    .from('goal_scorers')
+    .select('*')
+    .eq('match_id', matchId);
+
+  // Create a map of existing goal scorers by player_id and team_id
+  const existingMap = new Map();
+  if (existingGoalScorers) {
+    existingGoalScorers.forEach(gs => {
+      const key = `${gs.player_id}_${gs.team_id}`;
+      existingMap.set(key, gs);
+    });
+  }
+
+  // Merge goal scorers: keep existing ones from the other team, update/add ones from submitting team
+  const goalScorersToInsert = [];
+  const goalScorersToUpdate = [];
+  
+  // Add/update goal scorers from the submitting team
+  goalScorers.forEach(scorer => {
+    const key = `${scorer.player_id}_${scorer.team_id}`;
+    if (existingMap.has(key)) {
+      // Update existing goal scorer
+      goalScorersToUpdate.push({
+        id: existingMap.get(key).id,
+        goals: scorer.goals,
+      });
+    } else {
+      // Insert new goal scorer
+      goalScorersToInsert.push({
+        match_id: matchId,
+        player_id: scorer.player_id,
+        team_id: scorer.team_id,
+        goals: scorer.goals,
+      });
+    }
+  });
+
+  // Delete goal scorers from the submitting team that are no longer in the list
+  // (in case they removed some)
+  if (existingGoalScorers) {
+    const submittingTeamGoalScorers = existingGoalScorers.filter(gs => gs.team_id === submittingTeamId);
+    const currentPlayerIds = new Set(goalScorers.map(gs => gs.player_id));
+    const toDelete = submittingTeamGoalScorers.filter(gs => !currentPlayerIds.has(gs.player_id));
+    
+    if (toDelete.length > 0) {
+      await supabase
+        .from('goal_scorers')
+        .delete()
+        .in('id', toDelete.map(gs => gs.id));
+    }
+  }
+
+  // Update existing goal scorers
+  for (const update of goalScorersToUpdate) {
+    await supabase
+      .from('goal_scorers')
+      .update({ goals: update.goals })
+      .eq('id', update.id);
+  }
+
+  // Insert new goal scorers
+  if (goalScorersToInsert.length > 0) {
+    const { error: goalsError } = await supabase
+      .from('goal_scorers')
+      .insert(goalScorersToInsert);
+
+    if (goalsError) {
+      return { data: null, error: goalsError };
+    }
+  }
+
   // Only update ratings and stats if result is verified (both teams confirmed)
   if (updateData.verified_result) {
+    // Get all goal scorers (from both teams) for MVP selection
+    const { data: allGoalScorers } = await supabase
+      .from('goal_scorers')
+      .select('*')
+      .eq('match_id', matchId);
 
     // Auto-select MVP based on top goal scorer if not manually selected
     let finalMvpPlayerId = mvpPlayerId;
     
-    if (!finalMvpPlayerId && goalScorers.length > 0) {
+    if (!finalMvpPlayerId && allGoalScorers && allGoalScorers.length > 0) {
       // Find the player(s) with the most goals
-      const maxGoals = Math.max(...goalScorers.map(s => s.goals));
-      const topScorers = goalScorers.filter(s => s.goals === maxGoals);
+      const maxGoals = Math.max(...allGoalScorers.map(s => s.goals));
+      const topScorers = allGoalScorers.filter(s => s.goals === maxGoals);
       
       // If there are multiple players with the same highest goals, pick the first one
       // (In the future, could add tie-breaking logic like assists, team win, etc.)
@@ -342,28 +424,6 @@ export async function submitMatchResult(
         .from('matches')
         .update({ mvp_player_id: finalMvpPlayerId })
         .eq('id', matchId);
-    }
-
-    // Delete existing goal scorers first (in case of edit)
-    await supabase
-      .from('goal_scorers')
-      .delete()
-      .eq('match_id', matchId);
-
-    // Add goal scorers
-    if (goalScorers.length > 0) {
-      const { error: goalsError } = await supabase
-        .from('goal_scorers')
-        .insert(goalScorers.map(scorer => ({
-          match_id: matchId,
-          player_id: scorer.player_id,
-          team_id: scorer.team_id,
-          goals: scorer.goals,
-        })));
-
-      if (goalsError) {
-        return { data: null, error: goalsError };
-      }
     }
 
     // Update team stats (wins/losses) and ratings

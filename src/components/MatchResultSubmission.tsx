@@ -79,6 +79,7 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
         .eq('user_id', user.id)
         .single();
 
+      let currentUserTeamId: string | null = null;
       if (profile) {
         const { data: userTeam } = await supabase
           .from('teams')
@@ -87,6 +88,7 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
           .single();
 
         if (userTeam) {
+          currentUserTeamId = userTeam.id;
           setUserTeamId(userTeam.id);
         }
       }
@@ -105,8 +107,9 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
       setTeamAPlayers(membersA || []);
       setTeamBPlayers(membersB || []);
 
-      // Load existing goal scorers if match is completed
-      if (matchData.status === 'completed') {
+      // Load existing goal scorers - only from the submitting team
+      // This allows teams to see and edit their own goal scorers even before verification
+      if (currentUserTeamId) {
         const { data: existingGoalScorers } = await supabase
           .from('goal_scorers')
           .select(`
@@ -116,7 +119,8 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
               profiles (full_name)
             )
           `)
-          .eq('match_id', matchId);
+          .eq('match_id', matchId)
+          .eq('team_id', currentUserTeamId); // Only load goal scorers from the submitting team
 
         if (existingGoalScorers && existingGoalScorers.length > 0) {
           const loadedScorers: GoalScorer[] = existingGoalScorers.map((gs: any, index: number) => ({
@@ -150,8 +154,29 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
     setGoalScorers(goalScorers.filter(g => g.id !== id));
   };
 
-  const updateGoalScorer = (id: number, field: keyof GoalScorer, value: any) => {
-    setGoalScorers(goalScorers.map(g => g.id === id ? { ...g, [field]: value } : g));
+  const updateGoalScorer = (id: number, field: keyof GoalScorer, value: any, allPlayersList?: any[]) => {
+    setGoalScorers(goalScorers.map(g => {
+      if (g.id === id) {
+        const updated = { ...g, [field]: value };
+        // If player_id is being updated, automatically set team_id to submitting team
+        if (field === 'player_id' && value && match && allPlayersList) {
+          const isTeamA = userTeamId === match.team_a_id;
+          const isTeamB = userTeamId === match.team_b_id;
+          if (isTeamA) {
+            updated.team_id = match.team_a_id;
+          } else if (isTeamB) {
+            updated.team_id = match.team_b_id;
+          }
+          // Also update player name
+          const player = allPlayersList.find(p => String(p.id) === String(value));
+          if (player) {
+            updated.player = player.profiles?.full_name || '';
+          }
+        }
+        return updated;
+      }
+      return g;
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -175,13 +200,30 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
       return;
     }
 
-    // Validate goal scorers
-    const validGoalScorers = goalScorers.filter(gs => gs.player_id && gs.team_id && gs.goals > 0);
-    const totalGoals = validGoalScorers.reduce((sum, gs) => sum + gs.goals, 0);
+    // Determine which team is submitting
+    const isTeamA = userTeamId === match.team_a_id;
+    const isTeamB = userTeamId === match.team_b_id;
     
-    if (totalGoals !== scoreA + scoreB) {
-      setError(`Total goals from scorers (${totalGoals}) doesn't match total score (${scoreA + scoreB})`);
-      return;
+    // Validate goal scorers - only check the submitting team's goal scorers
+    const validGoalScorers = goalScorers.filter(gs => gs.player_id && gs.team_id && gs.goals > 0);
+    
+    // Only validate that the submitting team's goal scorers match their score
+    if (isTeamA) {
+      const teamAGoals = validGoalScorers
+        .filter(gs => gs.team_id === match.team_a_id)
+        .reduce((sum, gs) => sum + gs.goals, 0);
+      if (teamAGoals !== scoreA) {
+        setError(`Your team's goal scorers (${teamAGoals} goals) don't match your team's score (${scoreA})`);
+        return;
+      }
+    } else if (isTeamB) {
+      const teamBGoals = validGoalScorers
+        .filter(gs => gs.team_id === match.team_b_id)
+        .reduce((sum, gs) => sum + gs.goals, 0);
+      if (teamBGoals !== scoreB) {
+        setError(`Your team's goal scorers (${teamBGoals} goals) don't match your team's score (${scoreB})`);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -239,14 +281,18 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
     );
   }
 
-  // Build allPlayers array from team members
-  // The getTeamMembers function returns: [{ players: { ... }, ... }]
+  // Determine which team is submitting
+  const isTeamA = userTeamId === match?.team_a_id;
+  const isTeamB = userTeamId === match?.team_b_id;
+  const submittingTeamId = isTeamA ? match?.team_a_id : isTeamB ? match?.team_b_id : null;
+  const submittingTeam = isTeamA ? teamA : isTeamB ? teamB : null;
+  
+  // Build allPlayers array - only show players from the submitting team
   const allPlayers = [];
   
-  // Add Team A players
-  if (teamAPlayers && teamAPlayers.length > 0 && teamA) {
+  if (isTeamA && teamAPlayers && teamAPlayers.length > 0 && teamA) {
+    // Team A can only select Team A players
     teamAPlayers.forEach(member => {
-      // The property is 'players' (plural) from the Supabase query
       const player = member.players;
       if (player && player.id) {
         allPlayers.push({
@@ -258,12 +304,9 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
         });
       }
     });
-  }
-  
-  // Add Team B players
-  if (teamBPlayers && teamBPlayers.length > 0 && teamB) {
+  } else if (isTeamB && teamBPlayers && teamBPlayers.length > 0 && teamB) {
+    // Team B can only select Team B players
     teamBPlayers.forEach(member => {
-      // The property is 'players' (plural) from the Supabase query
       const player = member.players;
       if (player && player.id) {
         allPlayers.push({
@@ -304,6 +347,14 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
               {match.scheduled_time ? ` ${match.scheduled_time}` : ''} • 
               {match.location ? ` ${match.location}` : ''}
             </p>
+            {/* Submitting Team Info */}
+            {submittingTeam && (
+              <div className="mt-3 p-2 bg-[#00FF57]/10 border border-[#00FF57]/30 rounded-lg">
+                <p className="text-xs text-[#00FF57]">
+                  📝 You are submitting as <strong>{submittingTeam.name}</strong>. You can only add goal scorers from your team.
+                </p>
+              </div>
+            )}
             {/* Verification Status */}
             {match.team_a_result_submitted && match.team_b_result_submitted && match.verified_result ? (
               <div className="mt-3 p-2 bg-green-500/20 border border-green-500/50 rounded-lg">
@@ -320,7 +371,10 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
 
           {/* Final Score */}
           <div className="mb-6">
-            <h3 className="text-lg mb-4">Final Score</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg">Final Score</h3>
+              <p className="text-xs text-zinc-500">Both teams submit the full score</p>
+            </div>
             <div className="grid grid-cols-3 gap-4 items-center">
               <div>
                 <label className="text-sm text-zinc-400 mb-2 block">{teamA?.name}</label>
@@ -355,7 +409,14 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
           {/* Goal Scorers */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg">Goal Scorers</h3>
+              <div>
+                <h3 className="text-lg">Goal Scorers</h3>
+                <p className="text-sm text-zinc-500 mt-1">
+                  {isTeamA ? `Add ${teamA?.name || 'your team'}'s goal scorers` : 
+                   isTeamB ? `Add ${teamB?.name || 'your team'}'s goal scorers` : 
+                   'Add goal scorers'}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={addGoalScorer}
@@ -371,20 +432,17 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
                 <div key={scorer.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <select
-                      value={scorer.player_id}
+                      value={scorer.player_id || ''}
                       onChange={(e) => {
-                        const player = allPlayers.find(p => p.id === e.target.value);
-                        updateGoalScorer(scorer.id, 'player_id', e.target.value);
-                        updateGoalScorer(scorer.id, 'team_id', player?.team_id || '');
-                        updateGoalScorer(scorer.id, 'player', player?.profiles?.full_name || '');
+                        updateGoalScorer(scorer.id, 'player_id', e.target.value, allPlayers);
                       }}
                       className="flex-1 bg-black border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-[#00FF57] focus:outline-none"
                       required
                     >
                       <option value="">Select player</option>
                       {allPlayers.map((player) => (
-                        <option key={player.id} value={player.id}>
-                          {player.profiles?.full_name || 'Unknown'} ({player.team_name})
+                        <option key={player.id} value={String(player.id)}>
+                          {player.profiles?.full_name || 'Unknown'}
                         </option>
                       ))}
                     </select>
@@ -424,19 +482,19 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
             </h3>
             <div className="bg-gradient-to-br from-zinc-900 to-black rounded-xl p-4 border border-[#FF6600]/30">
               <select
-                value={mvp}
+                value={mvp || ''}
                 onChange={(e) => setMvp(e.target.value)}
                 className="w-full bg-black border-2 border-[#FF6600]/30 rounded-lg px-4 py-3 text-white focus:border-[#FF6600] focus:outline-none transition-colors"
               >
-                <option value="">Auto-select (Top Goal Scorer)</option>
+                <option value="">Auto-select (Top Goal Scorer from Both Teams)</option>
                 {allPlayers.map((player) => (
-                  <option key={player.id} value={player.id}>
-                    {player.profiles?.full_name || 'Unknown'} ({player.team_name})
+                  <option key={player.id} value={String(player.id)}>
+                    {player.profiles?.full_name || 'Unknown'}
                   </option>
                 ))}
               </select>
               <p className="text-xs text-zinc-500 mt-2">
-                💡 Leave empty to auto-select the top goal scorer, or manually choose the MVP
+                💡 Leave empty to auto-select the top goal scorer from both teams, or manually choose from your team
               </p>
             </div>
           </div>
