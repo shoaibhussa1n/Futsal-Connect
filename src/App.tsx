@@ -23,6 +23,7 @@ import PlayerNotifications from './components/PlayerNotifications';
 import TeamNotifications from './components/TeamNotifications';
 import UpcomingMatchesScreen from './components/UpcomingMatchesScreen';
 import UpdateMatchResultsScreen from './components/UpdateMatchResultsScreen';
+import MatchHistoryScreen from './components/MatchHistoryScreen';
 import { checkProfileComplete, checkPlayerProfile, checkTeamProfile, getProfile } from './lib/api';
 import { supabase } from './lib/supabase';
 import { Loader2 } from 'lucide-react';
@@ -288,6 +289,10 @@ export default function App() {
             setCurrentScreen('teamRegistration');
           }}
           onInvitePlayers={() => setCurrentScreen('teamInvitations')}
+          onViewMatchHistory={(teamId) => {
+            sessionStorage.setItem('teamId', teamId);
+            setCurrentScreen('matchHistory');
+          }}
           teamId={storedTeamId || undefined}
           key={storedTeamId || 'no-id'} // Force re-render when teamId changes
         />;
@@ -358,6 +363,16 @@ export default function App() {
             setCurrentScreen('matchResult');
           }}
         />;
+      case 'matchHistory': {
+        const storedTeamId = sessionStorage.getItem('teamId');
+        return <MatchHistoryScreen 
+          onBack={() => {
+            sessionStorage.removeItem('teamId');
+            setCurrentScreen('main');
+          }}
+          teamId={storedTeamId || undefined}
+        />;
+      }
       case 'main':
         return renderMainApp();
       default:

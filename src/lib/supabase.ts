@@ -129,6 +129,11 @@ export type Database = {
           team_b_score: number | null;
           mvp_player_id: string | null;
           notes: string | null;
+          team_a_result_submitted: boolean | null;
+          team_b_result_submitted: boolean | null;
+          team_a_submitted_at: string | null;
+          team_b_submitted_at: string | null;
+          verified_result: boolean | null;
           created_at: string;
           updated_at: string;
         };

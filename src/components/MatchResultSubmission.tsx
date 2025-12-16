@@ -28,6 +28,7 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
   const [teamB, setTeamB] = useState<any>(null);
   const [teamAPlayers, setTeamAPlayers] = useState<any[]>([]);
   const [teamBPlayers, setTeamBPlayers] = useState<any[]>([]);
+  const [userTeamId, setUserTeamId] = useState<string | null>(null);
   
   const [teamAScore, setTeamAScore] = useState('');
   const [teamBScore, setTeamBScore] = useState('');
@@ -70,6 +71,25 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
       setTeamAScore(matchData.team_a_score?.toString() || '');
       setTeamBScore(matchData.team_b_score?.toString() || '');
       setMvp(matchData.mvp_player_id || '');
+
+      // Get user's team ID
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        const { data: userTeam } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('captain_id', profile.id)
+          .single();
+
+        if (userTeam) {
+          setUserTeamId(userTeam.id);
+        }
+      }
 
       // Get team members
       const { data: membersA } = await supabase
@@ -189,7 +209,8 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
           team_id: gs.team_id,
           goals: gs.goals,
         })),
-        mvp || undefined
+        mvp || undefined,
+        userTeamId || undefined
       );
 
       if (submitError) {
@@ -262,6 +283,18 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
               {match.scheduled_time ? ` ${match.scheduled_time}` : ''} • 
               {match.location ? ` ${match.location}` : ''}
             </p>
+            {/* Verification Status */}
+            {match.team_a_result_submitted && match.team_b_result_submitted && match.verified_result ? (
+              <div className="mt-3 p-2 bg-green-500/20 border border-green-500/50 rounded-lg">
+                <p className="text-xs text-green-400">✓ Result verified by both teams</p>
+              </div>
+            ) : (match.team_a_result_submitted || match.team_b_result_submitted) && !match.verified_result ? (
+              <div className="mt-3 p-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
+                <p className="text-xs text-yellow-400">
+                  ⏳ Waiting for opponent to verify result
+                </p>
+              </div>
+            ) : null}
           </div>
 
           {/* Final Score */}
@@ -418,7 +451,11 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
           </button>
 
           <p className="text-xs text-center text-zinc-500">
-            Both teams will be notified once the result is submitted
+            {match.verified_result 
+              ? 'Result has been verified and ratings updated'
+              : match.team_a_result_submitted && match.team_b_result_submitted
+              ? 'Waiting for verification. The opponent will be notified to confirm.'
+              : 'The opponent will be notified to verify the result once you submit'}
           </p>
         </div>
       </form>

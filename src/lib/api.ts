@@ -243,17 +243,74 @@ export async function submitMatchResult(
   teamAScore: number,
   teamBScore: number,
   goalScorers: Array<{ player_id: string; team_id: string; goals: number }>,
-  mvpPlayerId?: string
+  mvpPlayerId?: string,
+  submittingTeamId?: string
 ) {
-  // Update match result
+  // Get current match to check verification status
+  const { data: currentMatch, error: fetchError } = await supabase
+    .from('matches')
+    .select('*')
+    .eq('id', matchId)
+    .single();
+
+  if (fetchError || !currentMatch) {
+    return { data: null, error: fetchError || new Error('Match not found') };
+  }
+
+  // Determine which team is submitting
+  const isTeamA = submittingTeamId === currentMatch.team_a_id;
+  const isTeamB = submittingTeamId === currentMatch.team_b_id;
+  
+  if (!isTeamA && !isTeamB) {
+    return { data: null, error: new Error('Invalid team submission') };
+  }
+
+  // Check if this is a verification (second team confirming)
+  const teamAHasSubmitted = currentMatch.team_a_result_submitted || false;
+  const teamBHasSubmitted = currentMatch.team_b_result_submitted || false;
+  const isVerification = (isTeamA && teamBHasSubmitted) || (isTeamB && teamAHasSubmitted);
+
+  // If verifying, check if scores match
+  if (isVerification) {
+    const existingScoreA = currentMatch.team_a_score;
+    const existingScoreB = currentMatch.team_b_score;
+    
+    if (existingScoreA !== teamAScore || existingScoreB !== teamBScore) {
+      return { 
+        data: null, 
+        error: new Error('Scores do not match. Please verify the correct scores with the other team.') 
+      };
+    }
+  }
+
+  // Update match with result submission
+  const updateData: any = {
+    team_a_score: teamAScore,
+    team_b_score: teamBScore,
+    mvp_player_id: mvpPlayerId,
+  };
+
+  // Mark which team submitted
+  if (isTeamA) {
+    updateData.team_a_result_submitted = true;
+    updateData.team_a_submitted_at = new Date().toISOString();
+  } else {
+    updateData.team_b_result_submitted = true;
+    updateData.team_b_submitted_at = new Date().toISOString();
+  }
+
+  // If both teams have submitted matching results, mark as verified and completed
+  if (isVerification || (isTeamA && teamBHasSubmitted) || (isTeamB && teamAHasSubmitted)) {
+    updateData.verified_result = true;
+    updateData.status = 'completed';
+  } else {
+    // Status remains 'confirmed' until both teams verify
+    updateData.status = 'confirmed';
+  }
+
   const { data: match, error: matchError } = await supabase
     .from('matches')
-    .update({
-      team_a_score: teamAScore,
-      team_b_score: teamBScore,
-      mvp_player_id: mvpPlayerId,
-      status: 'completed',
-    })
+    .update(updateData)
     .eq('id', matchId)
     .select()
     .single();
@@ -262,93 +319,190 @@ export async function submitMatchResult(
     return { data: null, error: matchError };
   }
 
-  // Delete existing goal scorers first (in case of edit)
-  await supabase
-    .from('goal_scorers')
-    .delete()
-    .eq('match_id', matchId);
+  // Only update ratings and stats if result is verified (both teams confirmed)
+  if (updateData.verified_result) {
 
-  // Add goal scorers
-  if (goalScorers.length > 0) {
-    const { error: goalsError } = await supabase
+    // Delete existing goal scorers first (in case of edit)
+    await supabase
       .from('goal_scorers')
-      .insert(goalScorers.map(scorer => ({
+      .delete()
+      .eq('match_id', matchId);
+
+    // Add goal scorers
+    if (goalScorers.length > 0) {
+      const { error: goalsError } = await supabase
+        .from('goal_scorers')
+        .insert(goalScorers.map(scorer => ({
+          match_id: matchId,
+          player_id: scorer.player_id,
+          team_id: scorer.team_id,
+          goals: scorer.goals,
+        })));
+
+      if (goalsError) {
+        return { data: null, error: goalsError };
+      }
+    }
+
+    // Update team stats (wins/losses) and ratings
+    const teamAWon = teamAScore > teamBScore;
+    const teamBWon = teamBScore > teamAScore;
+    const isDraw = teamAScore === teamBScore;
+
+    try {
+      // Update wins/losses/draws
+      if (teamAWon) {
+        const { data: teamA } = await supabase.from('teams').select('wins, rating').eq('id', match.team_a_id).single();
+        const { data: teamB } = await supabase.from('teams').select('losses, rating').eq('id', match.team_b_id).single();
+        
+        if (teamA) {
+          await supabase.from('teams').update({ 
+            wins: (teamA.wins || 0) + 1,
+            rating: Math.min(10.0, Math.max(1.0, (teamA.rating || 5.0) + 0.3))
+          }).eq('id', match.team_a_id);
+        }
+        if (teamB) {
+          await supabase.from('teams').update({ 
+            losses: (teamB.losses || 0) + 1,
+            rating: Math.min(10.0, Math.max(1.0, (teamB.rating || 5.0) - 0.3))
+          }).eq('id', match.team_b_id);
+        }
+      } else if (teamBWon) {
+        const { data: teamA } = await supabase.from('teams').select('losses, rating').eq('id', match.team_a_id).single();
+        const { data: teamB } = await supabase.from('teams').select('wins, rating').eq('id', match.team_b_id).single();
+        
+        if (teamA) {
+          await supabase.from('teams').update({ 
+            losses: (teamA.losses || 0) + 1,
+            rating: Math.min(10.0, Math.max(1.0, (teamA.rating || 5.0) - 0.3))
+          }).eq('id', match.team_a_id);
+        }
+        if (teamB) {
+          await supabase.from('teams').update({ 
+            wins: (teamB.wins || 0) + 1,
+            rating: Math.min(10.0, Math.max(1.0, (teamB.rating || 5.0) + 0.3))
+          }).eq('id', match.team_b_id);
+        }
+      } else if (isDraw) {
+        const { data: teamA } = await supabase.from('teams').select('draws').eq('id', match.team_a_id).single();
+        const { data: teamB } = await supabase.from('teams').select('draws').eq('id', match.team_b_id).single();
+        
+        if (teamA) {
+          await supabase.from('teams').update({ draws: (teamA.draws || 0) + 1 }).eq('id', match.team_a_id);
+        }
+        if (teamB) {
+          await supabase.from('teams').update({ draws: (teamB.draws || 0) + 1 }).eq('id', match.team_b_id);
+        }
+      }
+
+      // Update player ratings for goal scorers (+0.3 each)
+      for (const scorer of goalScorers) {
+        const { data: player } = await supabase
+          .from('players')
+          .select('rating, goals')
+          .eq('id', scorer.player_id)
+          .single();
+        
+        if (player) {
+          await supabase.from('players').update({
+            rating: Math.min(10.0, Math.max(1.0, (player.rating || 5.0) + 0.3)),
+            goals: (player.goals || 0) + scorer.goals
+          }).eq('id', scorer.player_id);
+        }
+      }
+
+      // Update MVP player rating (+0.5)
+      if (mvpPlayerId) {
+        const { data: mvpPlayer } = await supabase
+          .from('players')
+          .select('rating, mvps')
+          .eq('id', mvpPlayerId)
+          .single();
+        
+        if (mvpPlayer) {
+          await supabase.from('players').update({
+            rating: Math.min(10.0, Math.max(1.0, (mvpPlayer.rating || 5.0) + 0.5)),
+            mvps: (mvpPlayer.mvps || 0) + 1
+          }).eq('id', mvpPlayerId);
+        }
+
+        // Also update team MVP count
+        const mvpTeamId = goalScorers.find(s => s.player_id === mvpPlayerId)?.team_id;
+        if (mvpTeamId) {
+          const { data: mvpTeam } = await supabase
+            .from('teams')
+            .select('total_mvps')
+            .eq('id', mvpTeamId)
+            .single();
+          
+          if (mvpTeam) {
+            await supabase.from('teams').update({
+              total_mvps: (mvpTeam.total_mvps || 0) + 1
+            }).eq('id', mvpTeamId);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error updating ratings and stats:', error);
+    }
+  } else {
+    // If not verified yet, just save goal scorers for now
+    await supabase.from('goal_scorers').delete().eq('match_id', matchId);
+    if (goalScorers.length > 0) {
+      await supabase.from('goal_scorers').insert(goalScorers.map(scorer => ({
         match_id: matchId,
         player_id: scorer.player_id,
         team_id: scorer.team_id,
         goals: scorer.goals,
       })));
-
-    if (goalsError) {
-      return { data: null, error: goalsError };
     }
-  }
-
-  // Update team stats (wins/losses)
-  const teamAWon = teamAScore > teamBScore;
-  const teamBWon = teamBScore > teamAScore;
-  const isDraw = teamAScore === teamBScore;
-
-  // Try to use RPC functions if available, otherwise update directly
-  try {
-    if (teamAWon) {
-      // Try RPC first, fallback to direct update
-      const rpcResult = await supabase.rpc('increment_team_wins', { team_id: match.team_a_id });
-      if (rpcResult.error) {
-        // Fallback: get current value and increment
-        const { data: teamA } = await supabase.from('teams').select('wins').eq('id', match.team_a_id).single();
-        if (teamA) {
-          await supabase.from('teams').update({ wins: (teamA.wins || 0) + 1 }).eq('id', match.team_a_id);
-        }
-        const { data: teamB } = await supabase.from('teams').select('losses').eq('id', match.team_b_id).single();
-        if (teamB) {
-          await supabase.from('teams').update({ losses: (teamB.losses || 0) + 1 }).eq('id', match.team_b_id);
-        }
-      } else {
-        await supabase.rpc('increment_team_losses', { team_id: match.team_b_id });
-      }
-    } else if (teamBWon) {
-      const rpcResult = await supabase.rpc('increment_team_wins', { team_id: match.team_b_id });
-      if (rpcResult.error) {
-        const { data: teamB } = await supabase.from('teams').select('wins').eq('id', match.team_b_id).single();
-        if (teamB) {
-          await supabase.from('teams').update({ wins: (teamB.wins || 0) + 1 }).eq('id', match.team_b_id);
-        }
-        const { data: teamA } = await supabase.from('teams').select('losses').eq('id', match.team_a_id).single();
-        if (teamA) {
-          await supabase.from('teams').update({ losses: (teamA.losses || 0) + 1 }).eq('id', match.team_a_id);
-        }
-      } else {
-        await supabase.rpc('increment_team_losses', { team_id: match.team_a_id });
-      }
-    } else if (isDraw) {
-      const rpcResult = await supabase.rpc('increment_team_draws', { team_id: match.team_a_id });
-      if (rpcResult.error) {
-        const { data: teamA } = await supabase.from('teams').select('draws').eq('id', match.team_a_id).single();
-        if (teamA) {
-          await supabase.from('teams').update({ draws: (teamA.draws || 0) + 1 }).eq('id', match.team_a_id);
-        }
-        const { data: teamB } = await supabase.from('teams').select('draws').eq('id', match.team_b_id).single();
-        if (teamB) {
-          await supabase.from('teams').update({ draws: (teamB.draws || 0) + 1 }).eq('id', match.team_b_id);
-        }
-      } else {
-        await supabase.rpc('increment_team_draws', { team_id: match.team_b_id });
-      }
-    }
-
-    // Recalculate ratings (optional - can be handled by database triggers)
-    await supabase.rpc('calculate_team_rating', { team_id: match.team_a_id }).catch(() => {
-      // Rating calculation will be handled by database triggers or manually
-    });
-    await supabase.rpc('calculate_team_rating', { team_id: match.team_b_id }).catch(() => {
-      // Rating calculation will be handled by database triggers or manually
-    });
-  } catch (error) {
-    console.warn('Error updating team stats:', error);
   }
 
   return { data: match, error: null };
+}
+
+// Get matches that need verification from a team
+export async function getMatchesNeedingVerification(teamId: string) {
+  const { data, error } = await supabase
+    .from('matches')
+    .select(`
+      *,
+      team_a:teams!matches_team_a_id_fkey(id, name, logo_url),
+      team_b:teams!matches_team_b_id_fkey(id, name, logo_url)
+    `)
+    .or(`team_a_id.eq.${teamId},team_b_id.eq.${teamId}`)
+    .eq('status', 'confirmed')
+    .not('team_a_score', 'is', null)
+    .not('team_b_score', 'is', null)
+    .or(`and(team_a_id.eq.${teamId},team_b_result_submitted.eq.true,team_a_result_submitted.eq.false),and(team_b_id.eq.${teamId},team_a_result_submitted.eq.true,team_b_result_submitted.eq.false)`)
+    .order('scheduled_date', { ascending: false });
+
+  return { data, error };
+}
+
+// Get match history for a team
+export async function getTeamMatchHistory(teamId: string) {
+  const { data, error } = await supabase
+    .from('matches')
+    .select(`
+      *,
+      team_a:teams!matches_team_a_id_fkey(id, name, logo_url, rating),
+      team_b:teams!matches_team_b_id_fkey(id, name, logo_url, rating),
+      goal_scorers (
+        *,
+        players (
+          id,
+          profiles (full_name)
+        )
+      )
+    `)
+    .or(`team_a_id.eq.${teamId},team_b_id.eq.${teamId}`)
+    .eq('status', 'completed')
+    .eq('verified_result', true)
+    .order('scheduled_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  return { data, error };
 }
 
 // ==================== MATCH REQUESTS ====================

@@ -8,10 +8,11 @@ interface TeamProfileProps {
   onBack: () => void;
   onEditTeam?: () => void;
   onInvitePlayers?: () => void;
+  onViewMatchHistory?: (teamId: string) => void;
   teamId?: string; // Optional prop to view a specific team
 }
 
-export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamId: propTeamId }: TeamProfileProps) {
+export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, onViewMatchHistory, teamId: propTeamId }: TeamProfileProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState<any>(null);
@@ -296,6 +297,17 @@ export default function TeamProfile({ onBack, onEditTeam, onInvitePlayers, teamI
             </div>
           </div>
         </div>
+
+        {/* View Match History Button */}
+        {isCaptain && onViewMatchHistory && team && (
+          <button
+            onClick={() => onViewMatchHistory(team.id)}
+            className="w-full bg-gradient-to-r from-[#00FF57] to-[#00cc44] text-black py-3 rounded-xl mb-4 font-medium active:scale-95 transition-transform flex items-center justify-center gap-2"
+          >
+            <Trophy className="w-5 h-5" />
+            View Match History
+          </button>
+        )}
 
         {/* Players List */}
         <div className="mb-6">
