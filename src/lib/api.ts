@@ -323,7 +323,8 @@ export async function submitMatchResult(
 
   // Store goal scorers immediately (even before verification)
   // This allows both teams to submit their goal scorers separately
-  const submittingTeamId = isTeamA ? currentMatch.team_a_id : currentMatch.team_b_id;
+  // Use the submittingTeamId parameter (already validated above)
+  const teamIdForGoalScorers = submittingTeamId!; // Non-null assertion since we validated it exists
   
   // Get existing goal scorers to merge with new ones
   const { data: existingGoalScorers } = await supabase
@@ -367,7 +368,7 @@ export async function submitMatchResult(
   // Delete goal scorers from the submitting team that are no longer in the list
   // (in case they removed some)
   if (existingGoalScorers) {
-    const submittingTeamGoalScorers = existingGoalScorers.filter(gs => gs.team_id === submittingTeamId);
+    const submittingTeamGoalScorers = existingGoalScorers.filter(gs => gs.team_id === teamIdForGoalScorers);
     const currentPlayerIds = new Set(goalScorers.map(gs => gs.player_id));
     const toDelete = submittingTeamGoalScorers.filter(gs => !currentPlayerIds.has(gs.player_id));
     
