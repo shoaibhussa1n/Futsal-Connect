@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Plus, X, Award, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { submitMatchResult, getTeamById } from '../lib/api';
+import { submitMatchResult, getTeamById, getTeamMembers } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
 interface GoalScorer {
@@ -91,28 +91,16 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
         }
       }
 
-      // Get team members
-      const { data: membersA } = await supabase
-        .from('team_members')
-        .select(`
-          *,
-          players (
-            *,
-            profiles (full_name)
-          )
-        `)
-        .eq('team_id', matchData.team_a_id);
+      // Get team members using the API function for consistency
+      const { data: membersA, error: membersAError } = await getTeamMembers(matchData.team_a_id);
+      const { data: membersB, error: membersBError } = await getTeamMembers(matchData.team_b_id);
 
-      const { data: membersB } = await supabase
-        .from('team_members')
-        .select(`
-          *,
-          players (
-            *,
-            profiles (full_name)
-          )
-        `)
-        .eq('team_id', matchData.team_b_id);
+      if (membersAError) {
+        console.error('Error loading team A members:', membersAError);
+      }
+      if (membersBError) {
+        console.error('Error loading team B members:', membersBError);
+      }
 
       setTeamAPlayers(membersA || []);
       setTeamBPlayers(membersB || []);
@@ -251,10 +239,43 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
     );
   }
 
-  const allPlayers = [
-    ...teamAPlayers.map(m => ({ ...m.player, team_id: teamA.id, team_name: teamA.name })),
-    ...teamBPlayers.map(m => ({ ...m.player, team_id: teamB.id, team_name: teamB.name })),
-  ].filter(p => p && p.id);
+  // Build allPlayers array from team members
+  // The getTeamMembers function returns: [{ players: { ... }, ... }]
+  const allPlayers = [];
+  
+  // Add Team A players
+  if (teamAPlayers && teamAPlayers.length > 0 && teamA) {
+    teamAPlayers.forEach(member => {
+      // The property is 'players' (plural) from the Supabase query
+      const player = member.players;
+      if (player && player.id) {
+        allPlayers.push({
+          id: player.id,
+          ...player,
+          team_id: teamA.id,
+          team_name: teamA.name,
+          profiles: player.profiles || { full_name: 'Unknown Player' }
+        });
+      }
+    });
+  }
+  
+  // Add Team B players
+  if (teamBPlayers && teamBPlayers.length > 0 && teamB) {
+    teamBPlayers.forEach(member => {
+      // The property is 'players' (plural) from the Supabase query
+      const player = member.players;
+      if (player && player.id) {
+        allPlayers.push({
+          id: player.id,
+          ...player,
+          team_id: teamB.id,
+          team_name: teamB.name,
+          profiles: player.profiles || { full_name: 'Unknown Player' }
+        });
+      }
+    });
+  }
 
   return (
     <div className="min-h-screen bg-black">
