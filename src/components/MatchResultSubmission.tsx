@@ -407,7 +407,7 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
                 onChange={(e) => setMvp(e.target.value)}
                 className="w-full bg-black border-2 border-[#FF6600]/30 rounded-lg px-4 py-3 text-white focus:border-[#FF6600] focus:outline-none transition-colors"
               >
-                <option value="">Select MVP (Optional)</option>
+                <option value="">Auto-select (Top Goal Scorer)</option>
                 {allPlayers.map((player) => (
                   <option key={player.id} value={player.id}>
                     {player.profiles?.full_name || 'Unknown'} ({player.team_name})
@@ -415,7 +415,7 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
                 ))}
               </select>
               <p className="text-xs text-zinc-500 mt-2">
-                💡 Best overall performer regardless of team
+                💡 Leave empty to auto-select the top goal scorer, or manually choose the MVP
               </p>
             </div>
           </div>

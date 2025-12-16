@@ -284,10 +284,12 @@ export async function submitMatchResult(
   }
 
   // Update match with result submission
+  // Note: MVP will be auto-selected when result is verified if not manually provided
   const updateData: any = {
     team_a_score: teamAScore,
     team_b_score: teamBScore,
-    mvp_player_id: mvpPlayerId,
+    // Only set MVP if manually provided, otherwise it will be auto-selected on verification
+    ...(mvpPlayerId && { mvp_player_id: mvpPlayerId }),
   };
 
   // Mark which team submitted
@@ -321,6 +323,26 @@ export async function submitMatchResult(
 
   // Only update ratings and stats if result is verified (both teams confirmed)
   if (updateData.verified_result) {
+
+    // Auto-select MVP based on top goal scorer if not manually selected
+    let finalMvpPlayerId = mvpPlayerId;
+    
+    if (!finalMvpPlayerId && goalScorers.length > 0) {
+      // Find the player(s) with the most goals
+      const maxGoals = Math.max(...goalScorers.map(s => s.goals));
+      const topScorers = goalScorers.filter(s => s.goals === maxGoals);
+      
+      // If there are multiple players with the same highest goals, pick the first one
+      // (In the future, could add tie-breaking logic like assists, team win, etc.)
+      const topScorer = topScorers[0];
+      finalMvpPlayerId = topScorer.player_id;
+      
+      // Update the match with the auto-selected MVP
+      await supabase
+        .from('matches')
+        .update({ mvp_player_id: finalMvpPlayerId })
+        .eq('id', matchId);
+    }
 
     // Delete existing goal scorers first (in case of edit)
     await supabase
@@ -412,22 +434,23 @@ export async function submitMatchResult(
       }
 
       // Update MVP player rating (+0.5)
-      if (mvpPlayerId) {
+      // Use the final MVP (either manually selected or auto-selected)
+      if (finalMvpPlayerId) {
         const { data: mvpPlayer } = await supabase
           .from('players')
           .select('rating, mvps')
-          .eq('id', mvpPlayerId)
+          .eq('id', finalMvpPlayerId)
           .single();
         
         if (mvpPlayer) {
           await supabase.from('players').update({
             rating: Math.min(10.0, Math.max(1.0, (mvpPlayer.rating || 5.0) + 0.5)),
             mvps: (mvpPlayer.mvps || 0) + 1
-          }).eq('id', mvpPlayerId);
+          }).eq('id', finalMvpPlayerId);
         }
 
         // Also update team MVP count
-        const mvpTeamId = goalScorers.find(s => s.player_id === mvpPlayerId)?.team_id;
+        const mvpTeamId = goalScorers.find(s => s.player_id === finalMvpPlayerId)?.team_id;
         if (mvpTeamId) {
           const { data: mvpTeam } = await supabase
             .from('teams')
