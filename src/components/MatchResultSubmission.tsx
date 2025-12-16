@@ -244,7 +244,9 @@ export default function MatchResultSubmission({ onBack, matchId }: MatchResultSu
       );
 
       if (submitError) {
-        setError(submitError.message || 'Failed to submit result');
+        // Log full error for debugging
+        console.error('Submit match result error:', submitError);
+        setError(submitError.message || 'Failed to submit result. Check browser console for details.');
       } else {
         // Success - go back
         onBack();

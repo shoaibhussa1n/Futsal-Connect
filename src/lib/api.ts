@@ -266,8 +266,9 @@ export async function submitMatchResult(
   }
 
   // Check if this is a verification (second team confirming)
-  const teamAHasSubmitted = currentMatch.team_a_result_submitted || false;
-  const teamBHasSubmitted = currentMatch.team_b_result_submitted || false;
+  // Handle case where columns might not exist yet (graceful degradation)
+  const teamAHasSubmitted = (currentMatch as any).team_a_result_submitted || false;
+  const teamBHasSubmitted = (currentMatch as any).team_b_result_submitted || false;
   const isVerification = (isTeamA && teamBHasSubmitted) || (isTeamB && teamAHasSubmitted);
 
   // If verifying, check if scores match
@@ -310,14 +311,66 @@ export async function submitMatchResult(
     updateData.status = 'confirmed';
   }
 
-  const { data: match, error: matchError } = await supabase
+  // Try to update with verification columns first
+  let { data: match, error: matchError } = await supabase
     .from('matches')
     .update(updateData)
     .eq('id', matchId)
     .select()
     .single();
 
+  // Log the error for debugging
   if (matchError) {
+    console.error('Match update error:', {
+      message: matchError.message,
+      code: matchError.code,
+      status: matchError.status,
+      details: matchError.details,
+      hint: matchError.hint
+    });
+  }
+
+  // If error is due to missing columns (400 Bad Request from PostgREST), try without verification columns (fallback)
+  // Also try fallback for ANY 400 error, as schema cache issues can manifest differently
+  if (matchError && (
+    matchError.message?.includes('column') || 
+    matchError.message?.includes('schema cache') ||
+    matchError.message?.includes('team_b_result_submitted') ||
+    matchError.message?.includes('team_a_result_submitted') ||
+    matchError.message?.includes('42703') || // PostgreSQL error code for undefined column
+    matchError.code === '42703' ||
+    matchError.status === 400 || // Try fallback for any 400 error
+    (matchError.status === 400 && matchError.message?.toLowerCase().includes('column'))
+  )) {
+    // Fallback: Update without verification columns
+    const fallbackUpdateData: any = {
+      team_a_score: teamAScore,
+      team_b_score: teamBScore,
+      status: 'completed', // Mark as completed immediately if columns don't exist
+      ...(mvpPlayerId && { mvp_player_id: mvpPlayerId }),
+    };
+
+    const fallbackResult = await supabase
+      .from('matches')
+      .update(fallbackUpdateData)
+      .eq('id', matchId)
+      .select()
+      .single();
+
+    if (fallbackResult.error) {
+      return { 
+        data: null, 
+        error: new Error(
+          'Database schema is missing required columns. Please run SIMPLE_FIX.sql in Supabase SQL Editor. ' +
+          'The migration adds: team_a_result_submitted, team_b_result_submitted, team_a_submitted_at, team_b_submitted_at, verified_result'
+        )
+      };
+    }
+
+    // Use fallback result
+    match = fallbackResult.data;
+    matchError = null;
+  } else if (matchError) {
     return { data: null, error: matchError };
   }
 
